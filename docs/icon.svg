@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111318" />
+      <stop offset="100%" stop-color="#0a0b0f" />
+    </linearGradient>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#61afef" />
+      <stop offset="50%" stop-color="#c678dd" />
+      <stop offset="100%" stop-color="#98c379" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#61afef" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#c678dd" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)" stroke="#61afef" stroke-opacity="0.25" stroke-width="8" />
+  <circle cx="256" cy="256" r="180" fill="url(#glow)" />
+  <!-- Waveform Segments -->
+  <rect x="120" y="216" width="16" height="80" rx="8" fill="url(#grad)" opacity="0.6" />
+  <rect x="152" y="176" width="16" height="160" rx="8" fill="url(#grad)" opacity="0.85" />
+  <rect x="184" y="136" width="16" height="240" rx="8" fill="url(#grad)" />
+  <rect x="216" y="200" width="16" height="112" rx="8" fill="url(#grad)" opacity="0.7" />
+  <!-- Center symbol -->
+  <path d="M 272 160 L 272 312 C 272 336 292 352 316 352 C 340 352 360 336 360 312 L 360 160" 
+        fill="none" stroke="url(#grad)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="316" cy="256" r="14" fill="#98c379" />
+</svg>

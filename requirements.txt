@@ -1,0 +1,7 @@
+torch
+torchaudio
+silero-vad[audio]
+soundfile
+transformers
+sentencepiece
+huggingface_hub

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SegAUD — Audio Segmentation &amp; Transcription Toolkit</title>
+  <meta name="description" content="SegAUD is a developer toolkit for audio segmentation using Silero VAD and multilingual ASR via SraVaani, optimized for low-resource languages." />
+  <meta name="application-name" content="SegAUD" />
+  <meta name="apple-mobile-web-app-title" content="SegAUD" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0b0f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ───────────────────── NAV ───────────────────── -->
+  <nav id="main-nav" class="nav">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-icon">⎍</span> SegAUD
+      </a>
+      <ul class="nav-links">
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#projects">Project</a></li>
+        <li><a href="#docs">Documentation</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn btn-sm btn-download-nav" id="open-app-nav-btn" title="Open SegAUD in dedicated standalone window">
+          <span class="app-icon">↔</span> Open in app
+        </button>
+        <a href="#docs" class="btn btn-sm btn-ghost-nav" id="docs-nav-btn">
+          Documentation ↗
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ───────────────────── HERO ───────────────────── -->
+  <header id="hero" class="hero">
+    <div class="hero-glow"></div>
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <span class="badge">v1.0 · Open Source</span>
+        <h1>Audio Segmentation &amp; Transcription <span class="gradient-text">for Low-Resource Languages</span></h1>
+        <p class="hero-sub">
+          SegAUD combines <strong>Silero VAD</strong> for precise speech detection with
+          <strong>SraVaani ASR</strong> for multilingual transcription — purpose-built for
+          <em>low-resource languages</em>, with future <strong>WhisperX</strong>
+          cross-verification on the roadmap.
+        </p>
+        <div class="hero-actions">
+          <a href="#projects" class="btn btn-primary" id="get-started-btn">Project</a>
+          <a href="#docs" class="btn btn-ghost" id="view-docs-hero-btn">Documentation ↓</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span class="stat-num">16 kHz</span><span class="stat-label">Sample Rate</span></div>
+          <div class="stat"><span class="stat-num">250 ms</span><span class="stat-label">Min Speech</span></div>
+          <div class="stat"><span class="stat-num">20 s</span><span class="stat-label">Max Segment</span></div>
+          <div class="stat"><span class="stat-num">CPU</span><span class="stat-label">First Runtime</span></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="waveform-card">
+          <div class="waveform-header">
+            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+            <span class="waveform-title">audio_sample.wav</span>
+          </div>
+          <div class="waveform-body" id="waveform-canvas">
+            <canvas id="waveform" width="480" height="160"></canvas>
+            <div class="segment-overlay seg-1"></div>
+            <div class="segment-overlay seg-2"></div>
+            <div class="segment-overlay seg-3"></div>
+          </div>
+          <div class="waveform-footer">
+            <span class="tag tag-vad">VAD Active</span>
+            <span class="tag tag-asr">ASR Ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ───────────────────── PIPELINE ───────────────────── -->
+  <section id="pipeline" class="section">
+    <div class="container">
+      <span class="section-badge">Architecture</span>
+      <h2 class="section-title">Processing Pipeline</h2>
+      <p class="section-sub">Three-stage audio intelligence — from raw waveform to verified transcript.</p>
+      <div class="pipeline-row">
+        <div class="pipeline-step">
+          <div class="step-icon">🎙️</div>
+          <div class="step-num">01</div>
+          <h3>Audio Ingestion</h3>
+          <p>Load WAV / MP3 via Silero's <code>read_audio</code> or <code>soundfile</code> fallback. Resamples to 16 kHz mono automatically.</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-icon">📊</div>
+          <div class="step-num">02</div>
+          <h3>Silero VAD</h3>
+          <p>Speech timestamps with configurable thresholds — 250 ms min speech, 400 ms silence gap, 150 ms padding, 20 s max clip duration.</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-icon">📝</div>
+          <div class="step-num">03</div>
+          <h3>SraVaani ASR</h3>
+          <p>Each segment transcribed using ARTPARK-IISc/SraVaani-1.0 with <code>torch.inference_mode()</code>. Supports 20+ low-resource languages.</p>
+        </div>
+        <div class="pipeline-arrow future-arrow">⋯</div>
+        <div class="pipeline-step future">
+          <div class="step-icon">🔍</div>
+          <div class="step-num">04</div>
+          <h3>WhisperX <span class="roadmap-tag">Roadmap</span></h3>
+          <p>Cross-verify ASR output with WhisperX for word-level timestamps and improved accuracy on code-mixed speech.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── FEATURES ───────────────────── -->
+  <section id="features" class="section section-alt">
+    <div class="container">
+      <span class="section-badge">Capabilities</span>
+      <h2 class="section-title">Built for Real-World Audio</h2>
+      <p class="section-sub">Every component tuned for low-resource language work on commodity hardware.</p>
+      <div class="features-grid">
+        <div class="feature-card" id="feat-vad">
+          <div class="feature-icon">⎍</div>
+          <h3>Silero VAD Engine</h3>
+          <p>Pre-trained voice activity detection with 0.5 threshold, minimum speech duration of 250 ms, and 150 ms speech padding for clean segment boundaries.</p>
+          <code class="feature-code">threshold=0.5, min_speech_duration_ms=250</code>
+        </div>
+        <div class="feature-card" id="feat-asr">
+          <div class="feature-icon">🗣️</div>
+          <h3>SraVaani Transcription</h3>
+          <p>Multilingual ASR from ARTPARK-IISc supporting 20+ low-resource languages and regional variants. CPU &amp; GPU compatible.</p>
+          <code class="feature-code">model.transcribe(path, return_hypotheses=True)</code>
+        </div>
+        <div class="feature-card" id="feat-batch">
+          <div class="feature-icon">📦</div>
+          <h3>Batch Processing</h3>
+          <p>Process multiple audio files in a single run. Failed clips don't halt the batch — resilient pipeline with per-file output directories.</p>
+          <code class="feature-code">python main.py "a.wav" "b.mp3" "c.wav"</code>
+        </div>
+        <div class="feature-card" id="feat-output">
+          <div class="feature-icon">📄</div>
+          <h3>Structured Output</h3>
+          <p>Each file produces <code>segments.csv</code> with timestamps and <code>transcriptions.csv</code> with ASR drafts and a <code>verified</code> column for human review.</p>
+          <code class="feature-code">segments/&lt;stem&gt;/segment_00001.wav</code>
+        </div>
+        <div class="feature-card" id="feat-thread">
+          <div class="feature-icon">⚡</div>
+          <h3>Thread Optimization</h3>
+          <p>VAD runs single-threaded for determinism. ASR restores 4 threads for throughput. No thread contention between stages.</p>
+          <code class="feature-code">VAD_THREADS=1 → ASR_THREADS=4</code>
+        </div>
+        <div class="feature-card" id="feat-lang">
+          <div class="feature-icon">🌐</div>
+          <h3>Low Resource Languages Focus</h3>
+          <p>First-class support for low-resource languages. SraVaani's multilingual training includes diverse regional speech data tailored for under-resourced dialects.</p>
+          <code class="feature-code">Language: Low-Resource Dialects · 20+ Variants</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- ───────────────────── PROJECTS ───────────────────── -->
+  <section id="projects" class="section">
+    <div class="container">
+      <span class="section-badge">Workspace</span>
+      <h2 class="section-title">Projects</h2>
+      <p class="section-sub">Manage existing audio segmentation projects or generate a new pipeline configuration.</p>
+
+      <!-- Existing Projects List Container -->
+      <div class="existing-projects-card" id="existing-projects-block">
+        <!-- Duplicate Project Alert Banner -->
+        <div class="duplicate-project-alert" id="duplicate-project-alert" style="display: none;"></div>
+
+        <div class="existing-projects-header">
+          <div class="existing-projects-title-row">
+            <span class="projects-icon">📁</span>
+            <div>
+              <h3>Existing Projects</h3>
+              <p class="existing-projects-desc">Select a project to load its pipeline and process audio, or delete projects you no longer need.</p>
+            </div>
+          </div>
+          <span class="projects-count-badge" id="projects-count-badge">0 Projects</span>
+        </div>
+        <div class="projects-grid" id="projects-list-container">
+          <!-- Dynamically populated by JS with Select and Delete buttons -->
+        </div>
+      </div>
+
+      <!-- New Project Configuration Grid -->
+      <div class="new-project-grid" id="project-config-grid">
+        <div class="project-form-card">
+          <div class="card-inner-head">
+            <h3>New Project Configuration</h3>
+            <span class="chip-badge">Setup Pipeline</span>
+          </div>
+          <div class="form-group">
+            <div class="label-row">
+              <label for="proj-name">Project Name</label>
+              <span class="recommend-tag" id="recommend-tag" title="Click to use recommended name">Recommended: <code id="recommended-name">awadhi_transcription</code></span>
+            </div>
+            <input type="text" id="proj-name" placeholder="awadhi_transcription" spellcheck="false" />
+          </div>
+          <div class="form-group">
+            <label for="proj-lang">Target Language</label>
+            <select id="proj-lang">
+              <option value="awa">Awadhi (awa)</option>
+              <option value="hi">Hindi (hi)</option>
+              <option value="bn">Bengali (bn)</option>
+              <option value="ta">Tamil (ta)</option>
+              <option value="te">Telugu (te)</option>
+              <option value="mr">Marathi (mr)</option>
+              <option value="gu">Gujarati (gu)</option>
+              <option value="kn">Kannada (kn)</option>
+              <option value="ml">Malayalam (ml)</option>
+              <option value="pa">Punjabi (pa)</option>
+              <option value="or">Odia (or)</option>
+              <option value="as">Assamese (as)</option>
+              <option value="custom">Other (specify)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pipeline Tools</label>
+            <div class="tool-toggles">
+              <label class="toggle-item active" id="toggle-vad">
+                <input type="checkbox" checked disabled />
+                <span class="toggle-label">Silero VAD</span>
+                <span class="toggle-tag required">Required</span>
+              </label>
+              <label class="toggle-item active" id="toggle-sravaani">
+                <input type="checkbox" checked />
+                <span class="toggle-label">SraVaani ASR</span>
+                <span class="toggle-tag">Enabled</span>
+              </label>
+              <label class="toggle-item" id="toggle-whisperx">
+                <input type="checkbox" />
+                <span class="toggle-label">WhisperX</span>
+                <span class="toggle-tag roadmap">Coming Soon</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="param-header-flex">
+              <label class="param-main-label">VAD Parameters</label>
+              <label class="exception-toggle-label" for="param-exception-toggle" title="Enable custom VAD parameter overrides">
+                <input type="checkbox" id="param-exception-toggle" />
+                <span class="exception-toggle-switch"></span>
+                <span class="exception-toggle-text">Custom Exceptions</span>
+              </label>
+            </div>
+            <p class="param-hint-text" id="param-hint-text">Standard pipeline defaults are active. Enable exception mode only to apply parameter overrides for edge-case audio.</p>
+            <div class="param-grid locked-grid" id="param-grid">
+              <div class="param-item">
+                <span class="param-name">threshold</span>
+                <input type="number" value="0.5" step="0.05" min="0" max="1" id="param-threshold" disabled />
+                <span class="param-badge">default: 0.5</span>
+              </div>
+              <div class="param-item">
+                <span class="param-name">min_speech_ms</span>
+                <input type="number" value="250" step="50" min="0" id="param-min-speech" disabled />
+                <span class="param-badge">default: 250</span>
+              </div>
+              <div class="param-item">
+                <span class="param-name">min_silence_ms</span>
+                <input type="number" value="400" step="50" min="0" id="param-min-silence" disabled />
+                <span class="param-badge">default: 400</span>
+              </div>
+              <div class="param-item">
+                <span class="param-name">speech_pad_ms</span>
+                <input type="number" value="150" step="50" min="0" id="param-pad" disabled />
+                <span class="param-badge">default: 150</span>
+              </div>
+              <div class="param-item">
+                <span class="param-name">max_speech_s</span>
+                <input type="number" value="20" step="1" min="1" id="param-max-speech" disabled />
+                <span class="param-badge">default: 20</span>
+              </div>
+              <div class="param-item">
+                <span class="param-name">sample_rate</span>
+                <input type="number" value="16000" disabled id="param-sr" />
+                <span class="param-badge">fixed: 16k</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="generate-btn">⚡ Generate Project</button>
+        </div>
+
+        <div class="project-preview-card">
+          <h3>Generated Configuration</h3>
+          <div class="code-window">
+            <div class="code-header">
+              <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+              <span class="code-filename" id="preview-filename">segaud_config.py</span>
+              <button class="copy-btn" id="copy-config-btn" title="Copy configuration">⎘</button>
+            </div>
+<pre class="code-block" id="config-preview"><code><span class="cmt"># SegAUD Project Configuration</span>
+<span class="cmt"># Generated for: awadhi_transcription</span>
+
+<span class="var">PROJECT_NAME</span>    = <span class="str">"awadhi_transcription"</span>
+<span class="var">TARGET_LANG</span>     = <span class="str">"awa"</span>  <span class="cmt"># Awadhi</span>
+
+<span class="cmt"># ── VAD Settings ──</span>
+<span class="var">SAMPLE_RATE</span>     = <span class="num">16000</span>
+<span class="var">VAD_EXCEPTIONS</span>  = <span class="val">None</span>  <span class="cmt"># Uses standard defaults</span>
+
+<span class="cmt"># ── ASR Settings ──</span>
+<span class="var">ASR_ENGINE</span>      = <span class="str">"sravaani"</span>
+<span class="var">ASR_MODEL</span>       = <span class="str">"ARTPARK-IISc/SraVaani-1.0"</span>
+<span class="var">ASR_THREADS</span>     = <span class="num">4</span>
+<span class="var">DEVICE</span>          = <span class="str">"auto"</span>  <span class="cmt"># cuda if available</span>
+
+<span class="cmt"># ── Output ──</span>
+<span class="var">OUTPUT_DIR</span>      = <span class="str">"segments"</span>
+<span class="var">CSV_ENCODING</span>    = <span class="str">"utf-8-sig"</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── AUDIO WORKSPACE (VAD & ASR) ───────────────────── -->
+  <section id="audio-workspace" class="section section-workspace">
+    <div class="container">
+      <div class="workspace-header">
+        <span class="section-badge">Processing Lab</span>
+        <h2 class="section-title">Upload Audio &amp; Run Pipeline</h2>
+        <p class="section-sub">Process raw audio through Silero VAD speech activity detection and SraVaani multilingual ASR.</p>
+      </div>
+
+      <!-- Active Project Status Banner -->
+      <div class="active-project-banner" id="active-project-banner">
+        <div class="banner-left">
+          <span class="banner-pulse"></span>
+          <div>
+            <span class="banner-label">Current Active Project</span>
+            <h3 class="banner-proj-name" id="workspace-proj-name">awadhi_transcription</h3>
+          </div>
+        </div>
+        <div class="banner-tags" id="workspace-proj-tags">
+          <span class="tag tag-lang" id="workspace-lang-tag">Awadhi (awa)</span>
+          <span class="tag tag-vad" id="workspace-vad-tag">Silero VAD (0.5)</span>
+          <span class="tag tag-asr" id="workspace-asr-tag">SraVaani ASR</span>
+        </div>
+      </div>
+
+      <!-- Audio Ingestion & Player -->
+      <div class="audio-lab-grid">
+        <div class="audio-upload-card">
+          <div class="card-inner-head">
+            <h3>Audio Ingestion</h3>
+            <span class="chip-sr">16 kHz Mono Auto-Resampling</span>
+          </div>
+
+          <!-- Dropzone -->
+          <div class="audio-dropzone" id="audio-dropzone">
+            <input type="file" id="audio-file-input" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a" />
+            <div class="dropzone-content">
+              <span class="dropzone-icon">📥</span>
+              <p class="dropzone-title">Drop audio file here, or <span class="browse-link">browse</span></p>
+              <p class="dropzone-hint">Supports WAV, MP3, FLAC, OGG · Resamples to 16 kHz automatically</p>
+            </div>
+          </div>
+
+          <!-- Active Audio Preview & Configuration Bar (Shown only when audio is loaded) -->
+          <div class="loaded-audio-card" id="loaded-audio-card" style="display: none;">
+            <div class="loaded-audio-meta">
+              <div class="audio-icon-wrap">🎙️</div>
+              <div class="audio-meta-text">
+                <span class="audio-filename" id="audio-filename">No audio file selected</span>
+                <span class="audio-filesize" id="audio-fileinfo">-- kHz · Mono · --s</span>
+              </div>
+            </div>
+
+            <!-- Audio Name & Compulsory Domain Inputs -->
+            <div class="audio-meta-inputs">
+              <div class="form-group audio-name-group">
+                <div class="label-row">
+                  <label for="audio-custom-name">Audio File Name</label>
+                  <span class="input-hint">Default: original name (editable)</span>
+                </div>
+                <input type="text" id="audio-custom-name" class="form-input" placeholder="e.g. recording_session_01" spellcheck="false" />
+              </div>
+              <div class="form-group audio-domain-group">
+                <div class="label-row">
+                  <label for="audio-domain">Audio Domain <span class="required-star">*</span></label>
+                  <span class="input-hint compulsory-hint">Compulsory for dataset</span>
+                </div>
+                <input type="text" id="audio-domain" class="form-input" placeholder="e.g. Agriculture, Healthcare, Folk Tales, Education" required />
+                <span class="field-error-text" id="domain-error-hint" style="display: none;">⚠️ Domain is compulsory. Please enter a domain before running.</span>
+              </div>
+            </div>
+
+            <audio id="audio-player" controls preload="metadata" class="audio-player-element"></audio>
+            
+            <div class="pipeline-options-row">
+              <div class="backend-indicator-row">
+                <span class="backend-status-pill" id="backend-status-badge">⚡ Checking Engine...</span>
+              </div>
+              <div class="hf-token-input-wrap">
+                <input type="password" id="hf-token-input" class="form-input form-input-sm" placeholder="Hugging Face Token (optional, unlocks ARTPARK-IISc/SraVaani-1.0)" style="font-size: .76rem; padding: 6px 10px; width: 100%; box-sizing: border-box;" />
+              </div>
+              <label class="asr-toggle-label" for="enable-neural-asr" style="margin-top: 4px;">
+                <input type="checkbox" id="enable-neural-asr" checked />
+                <span class="toggle-indicator"></span>
+                <span class="toggle-text">Run ASR Speech Transcription (Devanagari)</span>
+              </label>
+              <span class="asr-toggle-hint">Uncheck for instant VAD segmentation without transcription.</span>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-run-pipeline" id="run-pipeline-btn">
+              <span>▶ Run Silero VAD &amp; SraVaani ASR</span>
+            </button>
+          </div>
+
+          <!-- Processing Progress Bar -->
+          <div class="pipeline-progress-box" id="pipeline-progress-box" style="display: none;">
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="pipeline-progress-fill"></div>
+            </div>
+            <div class="progress-status-row">
+              <div class="progress-status-left">
+                <span class="pipeline-spinner-ring" id="pipeline-spinner"></span>
+                <span class="progress-text" id="pipeline-status-text">Detecting speech segments with Silero VAD...</span>
+              </div>
+              <span class="progress-pct" id="pipeline-pct">Phase 1/3</span>
+            </div>
+            <div class="progress-skip-row">
+              <button type="button" id="skip-asr-btn" class="btn-skip-asr">⚡ Skip ASR &amp; Open Segments Now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Pipeline Info -->
+        <div class="audio-info-card">
+          <h3>Execution Pipeline Flow</h3>
+          <ul class="lab-pipeline-list">
+            <li class="pipeline-step-item" id="step-ingest">
+              <div class="step-status-icon">✓</div>
+              <div class="step-info">
+                <strong>01. Resampling &amp; Normalization</strong>
+                <p>Read via soundfile / Silero, cast to float32, mono 16 kHz.</p>
+              </div>
+            </li>
+            <li class="pipeline-step-item" id="step-vad">
+              <div class="step-status-icon vad-dot">●</div>
+              <div class="step-info">
+                <strong>02. Silero VAD Segmentation</strong>
+                <p>Extract speech regions with active parameters (<span id="active-vad-summary">threshold=0.5, pad=150ms</span>).</p>
+              </div>
+            </li>
+            <li class="pipeline-step-item" id="step-asr">
+              <div class="step-status-icon asr-dot">●</div>
+              <div class="step-info">
+                <strong>03. SraVaani ASR Inference</strong>
+                <p>Model transcribes speech slices into low-resource language scripts with <code>torch.inference_mode()</code>.</p>
+              </div>
+            </li>
+          </ul>
+
+          <div class="pipeline-perf-stats">
+            <div class="perf-metric">
+              <span class="metric-val">1 Thread</span>
+              <span class="metric-lbl">VAD Execution</span>
+            </div>
+            <div class="perf-metric">
+              <span class="metric-val">4 Threads</span>
+              <span class="metric-lbl">ASR Inference</span>
+            </div>
+            <div class="perf-metric">
+              <span class="metric-val" id="metric-vad-threshold">0.5 VAD</span>
+              <span class="metric-lbl">Cut Threshold</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segmentation & Transcription Results -->
+      <div class="vad-asr-results-card" id="vad-asr-results" style="display: none;">
+        <div class="results-header">
+          <div>
+            <h3>Speech Segments &amp; SraVaani Transcriptions</h3>
+            <p class="results-sub" id="results-summary">3 speech segments identified · Total speech duration: 14.15s</p>
+          </div>
+          <div class="results-export-actions">
+            <button type="button" class="btn btn-sm btn-ghost" id="export-segments-btn">⤓ segments.csv</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-transcripts-btn">⤓ transcriptions.csv</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-unverified-btn" title="Export separate CSV file containing only unverified segments">⤓ unverified.csv</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-audio-zip-btn">🎵⤓ Export Audio (.zip)</button>
+            <button type="button" class="btn btn-sm btn-primary" id="export-all-btn">⤓ Download All Results</button>
+          </div>
+        </div>
+
+        <!-- Interactive Visual Segments Timeline -->
+        <div class="timeline-visual-wrap">
+          <div class="timeline-label-row">
+            <span>0.0s</span>
+            <span>Waveform Speech Segments Timeline</span>
+            <span id="timeline-end-time">18.4s</span>
+          </div>
+          <div class="timeline-track" id="timeline-track">
+            <!-- Segment pills dynamically inserted -->
+          </div>
+        </div>
+
+        <!-- Inspection Table -->
+        <div class="table-wrap">
+          <table class="segments-table" id="segments-table">
+            <thead>
+              <tr>
+                <th class="col-seg-id">Segment ID</th>
+                <th class="col-time">Time &amp; Duration</th>
+                <th class="col-conf">VAD Conf</th>
+                <th class="col-domain">Domain</th>
+                <th class="col-transcript">Transcript (Devanagari)</th>
+                <th class="col-actions">Audio Clip</th>
+                <th class="col-review">Review</th>
+              </tr>
+            </thead>
+            <tbody id="segments-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── DOCUMENTATION ───────────────────── -->
+  <section id="docs" class="section section-alt">
+    <div class="container">
+      <span class="section-badge">Resources &amp; Specs</span>
+      <h2 class="section-title">Documentation &amp; Reference</h2>
+      <p class="section-sub">Detailed component specifications, architecture comparison matrix, and developer resources for SegAUD.</p>
+
+      <!-- Component Feature Comparison (Moved to Documentation) -->
+      <div class="docs-comparison-block">
+        <div class="docs-comparison-header">
+          <span class="docs-subbadge">Architecture Matrix</span>
+          <h3 class="docs-comparison-title">Component Feature Comparison</h3>
+          <p class="docs-comparison-sub">How SegAUD's pipeline modules compare across speed, compute requirements, and low-resource language support.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="comparison-table" id="feature-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Silero VAD</th>
+                <th>SraVaani ASR</th>
+                <th>WhisperX <span class="roadmap-tag">Planned</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Primary Function</td>
+                <td>Voice Activity Detection</td>
+                <td>Speech-to-Text</td>
+                <td>ASR + Forced Alignment</td>
+              </tr>
+              <tr>
+                <td>Low-Resource Language Support</td>
+                <td>Language-agnostic ✓</td>
+                <td>20+ low-resource languages ✓</td>
+                <td>Multilingual (99 langs)</td>
+              </tr>
+              <tr>
+                <td>CPU Inference</td>
+                <td class="cell-yes">✓ Optimized</td>
+                <td class="cell-yes">✓ Supported</td>
+                <td class="cell-partial">△ Possible (slower)</td>
+              </tr>
+              <tr>
+                <td>GPU Acceleration</td>
+                <td class="cell-partial">△ Not needed</td>
+                <td class="cell-yes">✓ CUDA auto-detect</td>
+                <td class="cell-yes">✓ CUDA required for speed</td>
+              </tr>
+              <tr>
+                <td>Word-level Timestamps</td>
+                <td class="cell-no">✗</td>
+                <td class="cell-no">✗</td>
+                <td class="cell-yes">✓ Via forced alignment</td>
+              </tr>
+              <tr>
+                <td>Segment-level Timestamps</td>
+                <td class="cell-yes">✓ start / end (seconds)</td>
+                <td class="cell-no">✗</td>
+                <td class="cell-yes">✓</td>
+              </tr>
+              <tr>
+                <td>Max Segment Duration</td>
+                <td>Configurable (default 20 s)</td>
+                <td>Per-segment input</td>
+                <td>Configurable chunk size</td>
+              </tr>
+              <tr>
+                <td>Model Size</td>
+                <td>~2 MB</td>
+                <td>~1 GB (gated HF repo)</td>
+                <td>~1.5 GB (large-v3)</td>
+              </tr>
+              <tr>
+                <td>Cross-Verification</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="cell-yes">✓ Planned with SraVaani</td>
+              </tr>
+              <tr>
+                <td>Output Format</td>
+                <td>CSV (segments)</td>
+                <td>CSV (transcriptions)</td>
+                <td>JSON / SRT / VTT</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3 class="docs-grid-title">Developer References &amp; Guides</h3>
+      <div class="docs-grid">
+        <a href="https://github.com/snakers4/silero-vad" target="_blank" rel="noopener" class="doc-card" id="doc-silero">
+          <div class="doc-icon">📖</div>
+          <h3>Silero VAD Docs</h3>
+          <p>Official documentation for voice activity detection — parameters, benchmarks, and advanced usage.</p>
+          <span class="doc-link">snakers4/silero-vad ↗</span>
+        </a>
+        <a href="https://vaani.iisc.ac.in/models/sravaani" target="_blank" rel="noopener" class="doc-card" id="doc-sravaani">
+          <div class="doc-icon">📚</div>
+          <h3>SraVaani Model</h3>
+          <p>ARTPARK-IISc's multilingual ASR — model card, supported languages, and Hugging Face access.</p>
+          <span class="doc-link">vaani.iisc.ac.in ↗</span>
+        </a>
+        <a href="https://github.com/m-bain/whisperX" target="_blank" rel="noopener" class="doc-card" id="doc-whisperx">
+          <div class="doc-icon">🔮</div>
+          <h3>WhisperX <span class="roadmap-tag">Future</span></h3>
+          <p>Word-level timestamps via forced alignment — planned for cross-verification with SraVaani output.</p>
+          <span class="doc-link">m-bain/whisperX ↗</span>
+        </a>
+        <a href="https://pytorch.org/docs/stable/index.html" target="_blank" rel="noopener" class="doc-card" id="doc-pytorch">
+          <div class="doc-icon">🔥</div>
+          <h3>PyTorch Reference</h3>
+          <p>Core ML framework — inference mode, thread management, and CUDA device handling.</p>
+          <span class="doc-link">pytorch.org ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────── FOOTER ───────────────────── -->
+  <footer class="footer" id="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-icon">⎍</span> SegAUD
+        <span class="footer-sub">Audio Segmentation &amp; Transcription Toolkit</span>
+      </div>
+      <div class="footer-meta">
+        <span>Python 3.11 · PyTorch · Silero VAD · SraVaani</span>
+        <span>CPU-first · Open Source</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Mode Status Toast -->
+  <div class="app-toast" id="app-toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
