@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 import webbrowser
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -42,6 +42,36 @@ PORT = 8080
 DOCS_DIR = ROOT_DIR / "docs"
 SEGMENTS_DIR = ROOT_DIR / "segments"
 SEGMENTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Thread-safe pipeline progress tracking
+PIPELINE_STATUS = {
+    "running": False,
+    "phase": "idle",
+    "current": 0,
+    "total": 0,
+    "message": "",
+    "percent": 0,
+    "start_time": 0.0,
+    "elapsed_s": 0.0
+}
+_status_lock = threading.Lock()
+
+
+def update_pipeline_progress(phase, current, total, message, percent):
+    """Callback passed to main.process_audio to update live pipeline status."""
+    with _status_lock:
+        now = time.time()
+        start = PIPELINE_STATUS.get("start_time") or now
+        elapsed = round(now - start, 1)
+        PIPELINE_STATUS.update({
+            "running": phase != "done",
+            "phase": phase,
+            "current": current,
+            "total": total,
+            "message": message,
+            "percent": percent,
+            "elapsed_s": elapsed
+        })
 
 
 def parse_multipart_data(rfile, headers):
@@ -109,6 +139,18 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(info).encode("utf-8"))
             return
 
+        # 1b. Live Pipeline Progress Polling Endpoint
+        if path == "/api/pipeline_progress":
+            with _status_lock:
+                status_copy = dict(PIPELINE_STATUS)
+                if status_copy.get("running") and status_copy.get("start_time"):
+                    status_copy["elapsed_s"] = round(time.time() - status_copy["start_time"], 1)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(status_copy).encode("utf-8"))
+            return
+
         # 2. Serve Segment Audio Files from /segments/...
         if path.startswith("/segments/"):
             rel_path = path[len("/segments/"):]
@@ -141,9 +183,11 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 token = data.get("token", "").strip()
                 if token:
                     os.environ["HF_TOKEN"] = token
-                    # Reset model so next call reloads SraVaani with token
-                    asr._model = None
-                    asr._model_type = None
+                    # Reset models so next call reloads SraVaani and PyAnnote with token
+                    asr._loaded_models.clear()
+                    import diarization
+                    diarization._pipeline = None
+                    diarization._pipeline_token = None
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
@@ -171,6 +215,9 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 custom_name = fields.get("custom_name", "").strip() or Path(filename).stem
                 domain = fields.get("domain", "").strip()
                 hf_token = fields.get("hf_token", "").strip()
+                selected_model = fields.get("model", "").strip()
+                run_asr_val = fields.get("run_asr", "true").strip().lower()
+                should_run_asr = run_asr_val not in ["false", "0", "no"]
 
                 if not domain:
                     self.send_error(400, "Domain is compulsory")
@@ -186,17 +233,42 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 with open(temp_file, "wb") as f:
                     f.write(audio_file["data"])
 
-                print(f"[SegAUD Server] Processing audio: {filename} (Domain: {domain}, Stem: {custom_name})")
+                print(f"[SegAUD Server] Processing audio: {filename} (Domain: {domain}, Model: {selected_model or 'Default'}, Run ASR: {should_run_asr}, Stem: {custom_name})")
 
-                # Run Python pipeline: Silero VAD -> SraVaani/Whisper ASR -> CSVs
+                # Initialize live pipeline progress
+                with _status_lock:
+                    PIPELINE_STATUS.update({
+                        "running": True,
+                        "phase": "init",
+                        "current": 0,
+                        "total": 0,
+                        "message": "01/03: Preparing audio for processing...",
+                        "percent": 5,
+                        "start_time": time.time(),
+                        "elapsed_s": 0.0
+                    })
+
+                # Run Python pipeline: Silero VAD -> Diarization & Split -> ASR -> CSVs
                 results, csv_path, unv_path = process_audio(
                     str(temp_file),
                     output_dir=str(SEGMENTS_DIR),
                     audio_name=custom_name,
-                    domain=domain
+                    domain=domain,
+                    token=hf_token or None,
+                    asr_model=selected_model or None,
+                    run_asr=should_run_asr,
+                    progress_callback=update_pipeline_progress
                 )
 
-                # Format response with clip URLs for UI playback
+                with _status_lock:
+                    PIPELINE_STATUS.update({
+                        "running": False,
+                        "phase": "done",
+                        "percent": 100,
+                        "message": f"Complete: {len(results)} segments generated"
+                    })
+
+                # Format response with clip URLs and speaker labels for UI playback
                 formatted_segments = []
                 for item in results:
                     seg_id = item["segment_id"]
@@ -209,17 +281,19 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                         "duration": round(item["end"] - item["start"], 2),
                         "conf": 0.95,
                         "domain": item["domain"],
+                        "speaker": item.get("speaker", "Speaker 1"),
                         "text": item.get("transcript", ""),
                         "verified": False,
                         "audio_url": rel_url
                     })
 
+                active_repo = asr._current_active_info.get("repo", "openai/whisper-base")
                 response_payload = {
                     "success": True,
                     "audio_name": custom_name,
                     "domain": domain,
                     "segments": formatted_segments,
-                    "model_used": asr._model_type or "SraVaani-1.0",
+                    "model_used": selected_model or active_repo or "Whisper-Base",
                     "csv_path": str(csv_path),
                     "unverified_csv_path": str(unv_path)
                 }
@@ -274,15 +348,17 @@ def main():
 
     server_address = ("127.0.0.1", port)
 
-    class ReusableHTTPServer(HTTPServer):
+    class ReusableThreadingServer(ThreadingHTTPServer):
+        daemon_threads = True
+
         def server_bind(self):
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             super().server_bind()
 
     try:
-        httpd = ReusableHTTPServer(server_address, SegAudRequestHandler)
+        httpd = ReusableThreadingServer(server_address, SegAudRequestHandler)
     except Exception:
-        httpd = HTTPServer(server_address, SegAudRequestHandler)
+        httpd = ThreadingHTTPServer(server_address, SegAudRequestHandler)
 
     app_url = f"http://127.0.0.1:{port}/"
 

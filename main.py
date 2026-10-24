@@ -16,45 +16,104 @@ if sys.platform == "win32":
 import torch
 
 import asr
-from vad import segment_audio
+import diarization
+from vad import segment_audio, _load_wav, SAMPLE_RATE
+import soundfile as sf
 
-FIELDS = ["segment_id", "source", "file", "start", "end", "transcript", "domain", "verified"]
+FIELDS = ["segment_id", "source", "file", "start", "end", "speaker", "transcript", "domain", "verified"]
 
 
-def process_audio(audio_path: str, output_dir: str = "segments", audio_name: str = None, domain: str = ""):
-    """VAD -> transcribe each segment -> transcriptions.csv in the file's folder."""
+def process_audio(
+    audio_path: str,
+    output_dir: str = "segments",
+    audio_name: str = None,
+    domain: str = "",
+    token: str = None,
+    asr_model: str = None,
+    run_asr: bool = True,
+    progress_callback = None
+):
+    """Pipeline: Phase 1 (VAD) -> Phase 2 (ASR) -> Phase 3 (Speaker Annotation) -> CSVs."""
     if not domain or not domain.strip():
         raise ValueError("Domain is compulsory.")
 
-    segments, out = segment_audio(audio_path, output_dir=output_dir, audio_name=audio_name, domain=domain)
-    results = []
+    source = Path(audio_path)
+    stem = audio_name.strip() if (audio_name and audio_name.strip()) else source.stem
+    stem = Path(stem).stem
 
-    torch.set_num_threads(asr.ASR_THREADS)  # VAD lowered it; restore for ASR
-    for index, segment in enumerate(segments, start=1):
-        print(f"[{Path(audio_path).name}] segment {index}/{len(segments)} ({segment['segment_id']})...")
-        try:
-            transcript = asr.transcribe(segment["file"], domain=domain)
-        except Exception as exc:  # keep going if one clip fails
-            print(f"  failed: {exc}")
-            transcript = ""
-        # transcripts are ASR drafts: verified stays empty until a native
-        # speaker checks them (put e.g. "yes" / corrected text elsewhere)
-        results.append({**segment, "transcript": transcript, "domain": domain, "verified": ""})
+    # Phase 1: Voice Activity Detection (Silero VAD)
+    if progress_callback:
+        progress_callback("vad", 0, 0, "01/03: Voice Activity Detection (Silero VAD detecting speech)...", 15)
+
+    raw_segments, out = segment_audio(audio_path, output_dir=output_dir, audio_name=audio_name, domain=domain)
+    total_clips = len(raw_segments)
+
+    # Phase 2: Speech Recognition (Devanagari ASR)
+    transcribed_segments = []
+    if run_asr:
+        torch.set_num_threads(asr.ASR_THREADS)
+        for index, segment in enumerate(raw_segments, start=1):
+            pct = int(20 + (index / max(1, total_clips)) * 60)
+            msg = f"02/03: Transcribing clip {index}/{total_clips} ({segment['segment_id']})..."
+            print(f"[{source.name}] clip {index}/{total_clips} ({segment['segment_id']})...")
+            if progress_callback:
+                progress_callback("asr", index, total_clips, msg, pct)
+            try:
+                transcript = asr.transcribe(segment["file"], token=token, domain=domain, model_name=asr_model)
+            except Exception as exc:
+                print(f"  failed: {exc}")
+                transcript = ""
+            transcribed_segments.append({
+                **segment,
+                "transcript": transcript,
+                "verified": ""
+            })
+    else:
+        for segment in raw_segments:
+            transcribed_segments.append({
+                **segment,
+                "transcript": "",
+                "verified": ""
+            })
+
+    # Phase 3: Speaker Annotation & Diarization
+    if progress_callback:
+        progress_callback("diarization", 0, total_clips, f"03/03: Speaker Diarization annotating {total_clips} speech turns...", 82)
+
+    try:
+        final_segments = diarization.diarize_and_assign_speakers(
+            audio_path,
+            transcribed_segments,
+            token=token,
+            progress_callback=progress_callback
+        )
+    except Exception as d_exc:
+        print(f"[SegAUD Pipeline] Diarization notice ({d_exc}). Defaulting to single speaker.")
+        final_segments = transcribed_segments
+
+    if progress_callback:
+        progress_callback("done", total_clips, total_clips, f"✓ Processed {len(final_segments)}/{total_clips} clips!", 100)
+
+    # Save segments.csv, transcriptions.csv, unverified.csv (plain text speaker labels, NO HTML badges)
+    with (out / "segments.csv").open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=["segment_id", "source", "file", "start", "end", "speaker", "domain"])
+        writer.writeheader()
+        writer.writerows([{k: v for k, v in r.items() if k in ["segment_id", "source", "file", "start", "end", "speaker", "domain"]} for r in final_segments])
 
     output_csv = out / "transcriptions.csv"
     with output_csv.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDS)
         writer.writeheader()
-        writer.writerows(results)
+        writer.writerows(final_segments)
 
     unverified_csv = out / "unverified.csv"
-    unverified_results = [r for r in results if not r.get("verified")]
+    unverified_results = [r for r in final_segments if not r.get("verified")]
     with unverified_csv.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(unverified_results)
 
-    return results, output_csv, unverified_csv
+    return final_segments, output_csv, unverified_csv
 
 
 def main():

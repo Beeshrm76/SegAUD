@@ -1,0 +1,2 @@
+﻿segment_id,source,file,start,end,speaker,transcript,domain,verified
+test_fast_diar_seg00001,speech.wav,segments\test_fast_diar\test_fast_diar_seg00001.wav,0.0,4.5,Speaker 1,,Agriculture,

@@ -55,8 +55,8 @@ def _load_wav(audio_path: str) -> torch.Tensor:
     return read_audio(str(audio_path), sampling_rate=SAMPLE_RATE)
 
 
-def merge_adjacent_phrases(intervals, max_gap=0.55, max_duration=9.0):
-    """Merge short pauses between connected words/phrases of the same speaker (e.g. 'I am ... Bee')."""
+def merge_adjacent_phrases(intervals, max_gap=0.50, max_duration=8.5):
+    """Merge short breath pauses between connected words/phrases of a speaker to form cohesive sentences."""
     if not intervals:
         return []
     merged = [dict(intervals[0])]
@@ -64,7 +64,6 @@ def merge_adjacent_phrases(intervals, max_gap=0.55, max_duration=9.0):
         prev = merged[-1]
         gap = curr["start"] - prev["end"]
         combined_dur = curr["end"] - prev["start"]
-        # If thinking/breath pause is under 550ms and combined phrase is <= 9s, keep in one segment
         if gap <= max_gap and combined_dur <= max_duration:
             prev["end"] = curr["end"]
         else:
@@ -90,12 +89,12 @@ def segment_audio(audio_path: str, output_dir: str = "segments", audio_name: str
         return_seconds=True,
         threshold=0.5,
         min_speech_duration_ms=250,
-        min_silence_duration_ms=450,  # 450ms avoids breaking mid-sentence pauses (e.g. 'I am ... Bee')
-        speech_pad_ms=150,           # Smoothly capture word onsets and fading consonants
-        max_speech_duration_s=9.0,   # Keep cohesive sentence units under 9s
+        min_silence_duration_ms=450,
+        speech_pad_ms=120,
+        max_speech_duration_s=8.5,
     )
 
-    timestamps = merge_adjacent_phrases(raw_timestamps, max_gap=0.55, max_duration=9.0)
+    timestamps = merge_adjacent_phrases(raw_timestamps, max_gap=0.50, max_duration=8.5)
 
     results = []
     seg_idx = 1
@@ -120,13 +119,14 @@ def segment_audio(audio_path: str, output_dir: str = "segments", audio_name: str
             "file": str(filename),
             "start": round(start, 3),
             "end": round(end, 3),
+            "speaker": "Speaker 1",
             "domain": domain,
         })
 
     with (output / "segments.csv").open(
         "w", newline="", encoding="utf-8-sig"
     ) as f:
-        writer = csv.DictWriter(f, fieldnames=["segment_id", "source", "file", "start", "end", "domain"])
+        writer = csv.DictWriter(f, fieldnames=["segment_id", "source", "file", "start", "end", "speaker", "domain"])
         writer.writeheader()
         writer.writerows(results)
 

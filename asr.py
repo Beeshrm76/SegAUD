@@ -28,8 +28,11 @@ REPO = "ARTPARK-IISc/SraVaani-1.0"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ASR_THREADS = 4
 
-_model_obj = None
-_model_type = None  # "sravaani" or "whisper"
+_loaded_models = {}
+_current_active_info = {
+    "repo": "openai/whisper-base",
+    "type": "whisper"
+}
 
 
 def clean_transcript(text: str) -> str:
@@ -48,11 +51,9 @@ def clean_transcript(text: str) -> str:
     return t
 
 
-def get_model(token: str = None):
-    """Lazy load SraVaani-1.0 with HF token, or fallback to high-quality Whisper Base Devanagari."""
-    global _model_obj, _model_type
-    if _model_obj is not None:
-        return _model_obj, _model_type
+def get_model(token: str = None, model_name: str = None):
+    """Dynamically load any requested Hugging Face model or fallback to Whisper Base Devanagari."""
+    global _loaded_models, _current_active_info
 
     access_token = token or os.environ.get("HF_TOKEN")
     if not access_token:
@@ -62,37 +63,87 @@ def get_model(token: str = None):
         except Exception:
             pass
 
-    # 1. Attempt loading ARTPARK-IISc/SraVaani-1.0 if HF access token is provided
-    if access_token:
+    target = (model_name or "").strip()
+    if not target:
+        target = REPO if access_token else "openai/whisper-base"
+
+    if target.startswith("custom:"):
+        target = target[len("custom:"):].strip()
+
+    cache_key = (target, access_token)
+    if cache_key in _loaded_models:
+        return _loaded_models[cache_key]
+
+    print(f"[SegAUD ASR] Initializing Hugging Face model: '{target}' on {DEVICE}...", flush=True)
+
+    # 1. ARTPARK-IISc/SraVaani-1.0
+    if "sravaani" in target.lower():
         try:
             from transformers import AutoModel
-            print(f"[SegAUD ASR] Attempting to load {REPO} on {DEVICE}...", flush=True)
             model = AutoModel.from_pretrained(
-                REPO,
+                target,
                 trust_remote_code=True,
                 token=access_token,
             ).to(DEVICE).eval()
-            _model_obj = model
-            _model_type = "sravaani"
-            print("[SegAUD ASR] SraVaani-1.0 loaded successfully.", flush=True)
-            return _model_obj, _model_type
+            entry = ("sravaani", model, None)
+            _loaded_models[cache_key] = entry
+            _current_active_info = {"repo": target, "type": "sravaani"}
+            print(f"[SegAUD ASR] SraVaani model '{target}' loaded successfully.", flush=True)
+            return entry
         except Exception as exc:
-            print(f"[SegAUD ASR] Note: SraVaani-1.0 requires approved access ({exc}). Using Whisper Devanagari.", flush=True)
+            print(f"[SegAUD ASR] SraVaani load note ({exc}). Attempting standard pipeline/whisper fallback...", flush=True)
 
-    # 2. High-performance Whisper Base in Devanagari (vastly higher accuracy than Tiny)
+    # 2. Any Whisper model family (openai/whisper-*, vasista22/whisper-*, etc.)
+    if "whisper" in target.lower():
+        try:
+            from transformers import AutoProcessor, WhisperForConditionalGeneration
+            processor = AutoProcessor.from_pretrained(target, token=access_token)
+            model = WhisperForConditionalGeneration.from_pretrained(target, token=access_token).to(DEVICE).eval()
+            entry = ("whisper", model, processor)
+            _loaded_models[cache_key] = entry
+            _current_active_info = {"repo": target, "type": "whisper"}
+            print(f"[SegAUD ASR] Whisper model '{target}' loaded successfully on {DEVICE}.", flush=True)
+            return entry
+        except Exception as exc:
+            print(f"[SegAUD ASR] Whisper load note for '{target}' ({exc}).", flush=True)
+
+    # 3. Any Hugging Face ASR model (Wav2Vec2, HuBERT, MMS, CTC, etc.) via automatic-speech-recognition pipeline
+    try:
+        from transformers import pipeline
+        device_idx = 0 if DEVICE == "cuda" else -1
+        pipe = pipeline(
+            "automatic-speech-recognition",
+            model=target,
+            token=access_token,
+            device=device_idx,
+            trust_remote_code=True
+        )
+        entry = ("pipeline", pipe, None)
+        _loaded_models[cache_key] = entry
+        _current_active_info = {"repo": target, "type": "pipeline"}
+        print(f"[SegAUD ASR] Hugging Face ASR pipeline for '{target}' loaded successfully.", flush=True)
+        return entry
+    except Exception as exc:
+        print(f"[SegAUD ASR] HF Pipeline load failed for '{target}' ({exc}).", flush=True)
+
+    # 4. Fallback to OpenAI Whisper Base
+    fallback_repo = "openai/whisper-base"
+    fallback_key = (fallback_repo, None)
+    if fallback_key in _loaded_models:
+        return _loaded_models[fallback_key]
+
     try:
         from transformers import AutoProcessor, WhisperForConditionalGeneration
-        model_name = "openai/whisper-base"
-        print(f"[SegAUD ASR] Initializing PyTorch Whisper-Base engine for Devanagari transcription...", flush=True)
-        processor = AutoProcessor.from_pretrained(model_name)
-        model = WhisperForConditionalGeneration.from_pretrained(model_name).to(DEVICE).eval()
-        _model_obj = (processor, model)
-        _model_type = "whisper"
-        print(f"[SegAUD ASR] PyTorch Whisper-Base engine ready on {DEVICE}.", flush=True)
-        return _model_obj, _model_type
-    except Exception as e2:
-        print(f"[SegAUD ASR] Fallback error: {e2}", flush=True)
-        raise e2
+        processor = AutoProcessor.from_pretrained(fallback_repo)
+        model = WhisperForConditionalGeneration.from_pretrained(fallback_repo).to(DEVICE).eval()
+        entry = ("whisper", model, processor)
+        _loaded_models[fallback_key] = entry
+        _current_active_info = {"repo": fallback_repo, "type": "whisper_fallback"}
+        print(f"[SegAUD ASR] Fallback engine '{fallback_repo}' ready on {DEVICE}.", flush=True)
+        return entry
+    except Exception as e_fb:
+        print(f"[SegAUD ASR] Fatal fallback error: {e_fb}", flush=True)
+        raise e_fb
 
 
 def _hyp_text(hyp) -> str:
@@ -100,10 +151,10 @@ def _hyp_text(hyp) -> str:
     return hyp if isinstance(hyp, str) else getattr(hyp, "text", str(hyp))
 
 
-def transcribe(audio_path: str, token: str = None, lang: str = "hi", domain: str = "") -> str:
-    """Transcribe an audio clip using SraVaani or Whisper into authentic Devanagari script."""
+def transcribe(audio_path: str, token: str = None, lang: str = "hi", domain: str = "", model_name: str = None) -> str:
+    """Transcribe an audio clip using the designated Hugging Face model into authentic script."""
     torch.set_num_threads(ASR_THREADS)
-    model_obj, model_type = get_model(token=token)
+    model_type, model_obj, processor = get_model(token=token, model_name=model_name)
 
     if model_type == "sravaani":
         with torch.inference_mode():
@@ -112,8 +163,19 @@ def transcribe(audio_path: str, token: str = None, lang: str = "hi", domain: str
             hyps = [hyps]
         raw = "\n".join(_hyp_text(h) for h in hyps).strip()
         return clean_transcript(raw)
+
+    elif model_type == "pipeline":
+        try:
+            res = model_obj(str(audio_path))
+            raw = res.get("text", "") if isinstance(res, dict) else str(res)
+            return clean_transcript(raw)
+        except Exception as e:
+            print(f"[SegAUD ASR] Pipeline transcription error: {e}")
+            return ""
+
     else:
-        # Load audio into memory as float32 array
+        # Whisper model family
+        model = model_obj
         import soundfile as sf
         try:
             data, sr = sf.read(str(audio_path), dtype="float32")
@@ -140,10 +202,8 @@ def transcribe(audio_path: str, token: str = None, lang: str = "hi", domain: str
         if len(data) == 0 or rms < 0.003:
             return ""
 
-        processor, model = model_obj
         input_features = processor(data, sampling_rate=sr, return_tensors="pt").input_features.to(DEVICE)
 
-        # Build clean generation config with no conflicting arguments
         gen_config = copy.deepcopy(model.generation_config)
         gen_config.language = "hi"
         gen_config.task = "transcribe"
@@ -190,7 +250,7 @@ def get_active_model_info():
     """Return info about current model."""
     return {
         "device": DEVICE,
-        "repo": REPO if _model_type == "sravaani" else "openai/whisper-base (Devanagari)",
-        "model_type": _model_type or "pending",
+        "repo": _current_active_info.get("repo", REPO),
+        "model_type": _current_active_info.get("type", "pending"),
         "has_token": bool(os.environ.get("HF_TOKEN"))
     }

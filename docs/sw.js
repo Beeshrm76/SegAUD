@@ -1,5 +1,5 @@
 // SegAUD Service Worker for PWA Installation
-const CACHE_NAME = 'segaud-v11';
+const CACHE_NAME = 'segaud-v17';
 const ASSETS = [
   './',
   './index.html',

@@ -1,95 +1,101 @@
-﻿segment_id,source,file,start,end,domain
-1_dailyconv_seg00001,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00001.wav,0.4,8.4,conv
-1_dailyconv_seg00002,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00002.wav,12.7,17.9,conv
-1_dailyconv_seg00003,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00003.wav,18.1,24.0,conv
-1_dailyconv_seg00004,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00004.wav,24.1,31.1,conv
-1_dailyconv_seg00005,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00005.wav,31.1,39.4,conv
-1_dailyconv_seg00006,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00006.wav,39.4,43.1,conv
-1_dailyconv_seg00007,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00007.wav,43.5,50.8,conv
-1_dailyconv_seg00008,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00008.wav,50.9,55.6,conv
-1_dailyconv_seg00009,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00009.wav,55.7,61.4,conv
-1_dailyconv_seg00010,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00010.wav,61.5,69.1,conv
-1_dailyconv_seg00011,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00011.wav,69.4,77.1,conv
-1_dailyconv_seg00012,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00012.wav,77.2,86.0,conv
-1_dailyconv_seg00013,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00013.wav,86.0,92.3,conv
-1_dailyconv_seg00014,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00014.wav,92.3,97.8,conv
-1_dailyconv_seg00015,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00015.wav,97.8,103.4,conv
-1_dailyconv_seg00016,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00016.wav,103.5,108.0,conv
-1_dailyconv_seg00017,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00017.wav,108.0,114.1,conv
-1_dailyconv_seg00018,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00018.wav,114.1,122.6,conv
-1_dailyconv_seg00019,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00019.wav,122.6,127.2,conv
-1_dailyconv_seg00020,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00020.wav,127.2,134.2,conv
-1_dailyconv_seg00021,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00021.wav,134.6,138.6,conv
-1_dailyconv_seg00022,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00022.wav,138.7,147.5,conv
-1_dailyconv_seg00023,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00023.wav,147.5,151.2,conv
-1_dailyconv_seg00024,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00024.wav,151.2,157.7,conv
-1_dailyconv_seg00025,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00025.wav,158.0,165.9,conv
-1_dailyconv_seg00026,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00026.wav,166.4,172.0,conv
-1_dailyconv_seg00027,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00027.wav,172.1,179.9,conv
-1_dailyconv_seg00028,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00028.wav,179.9,187.0,conv
-1_dailyconv_seg00029,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00029.wav,187.0,191.6,conv
-1_dailyconv_seg00030,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00030.wav,191.6,200.4,conv
-1_dailyconv_seg00031,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00031.wav,200.4,207.5,conv
-1_dailyconv_seg00032,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00032.wav,207.7,214.0,conv
-1_dailyconv_seg00033,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00033.wav,214.3,216.9,conv
-1_dailyconv_seg00034,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00034.wav,217.2,225.9,conv
-1_dailyconv_seg00035,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00035.wav,225.9,234.6,conv
-1_dailyconv_seg00036,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00036.wav,234.6,237.1,conv
-1_dailyconv_seg00037,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00037.wav,237.1,245.9,conv
-1_dailyconv_seg00038,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00038.wav,245.9,254.9,conv
-1_dailyconv_seg00039,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00039.wav,255.2,264.2,conv
-1_dailyconv_seg00040,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00040.wav,265.1,273.6,conv
-1_dailyconv_seg00041,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00041.wav,273.6,281.6,conv
-1_dailyconv_seg00042,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00042.wav,281.8,289.7,conv
-1_dailyconv_seg00043,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00043.wav,290.0,297.6,conv
-1_dailyconv_seg00044,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00044.wav,297.8,299.6,conv
-1_dailyconv_seg00045,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00045.wav,299.8,308.8,conv
-1_dailyconv_seg00046,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00046.wav,308.8,317.8,conv
-1_dailyconv_seg00047,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00047.wav,317.8,325.3,conv
-1_dailyconv_seg00048,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00048.wav,325.3,329.2,conv
-1_dailyconv_seg00049,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00049.wav,329.2,337.8,conv
-1_dailyconv_seg00050,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00050.wav,337.8,345.4,conv
-1_dailyconv_seg00051,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00051.wav,345.4,350.5,conv
-1_dailyconv_seg00052,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00052.wav,350.5,355.6,conv
-1_dailyconv_seg00053,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00053.wav,355.6,363.5,conv
-1_dailyconv_seg00054,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00054.wav,363.5,367.5,conv
-1_dailyconv_seg00055,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00055.wav,367.5,372.7,conv
-1_dailyconv_seg00056,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00056.wav,372.7,377.4,conv
-1_dailyconv_seg00057,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00057.wav,378.0,381.3,conv
-1_dailyconv_seg00058,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00058.wav,381.4,388.7,conv
-1_dailyconv_seg00059,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00059.wav,388.8,390.5,conv
-1_dailyconv_seg00060,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00060.wav,390.5,399.3,conv
-1_dailyconv_seg00061,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00061.wav,399.3,404.1,conv
-1_dailyconv_seg00062,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00062.wav,404.1,412.9,conv
-1_dailyconv_seg00063,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00063.wav,412.9,420.8,conv
-1_dailyconv_seg00064,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00064.wav,420.8,424.2,conv
-1_dailyconv_seg00065,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00065.wav,424.2,432.9,conv
-1_dailyconv_seg00066,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00066.wav,432.9,439.3,conv
-1_dailyconv_seg00067,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00067.wav,439.3,442.2,conv
-1_dailyconv_seg00068,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00068.wav,442.5,451.4,conv
-1_dailyconv_seg00069,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00069.wav,451.4,457.3,conv
-1_dailyconv_seg00070,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00070.wav,457.3,460.7,conv
-1_dailyconv_seg00071,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00071.wav,460.7,469.5,conv
-1_dailyconv_seg00072,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00072.wav,469.5,475.5,conv
-1_dailyconv_seg00073,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00073.wav,475.9,483.2,conv
-1_dailyconv_seg00074,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00074.wav,483.2,486.4,conv
-1_dailyconv_seg00075,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00075.wav,486.4,495.1,conv
-1_dailyconv_seg00076,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00076.wav,495.1,503.8,conv
-1_dailyconv_seg00077,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00077.wav,504.2,513.0,conv
-1_dailyconv_seg00078,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00078.wav,513.0,521.7,conv
-1_dailyconv_seg00079,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00079.wav,521.7,530.4,conv
-1_dailyconv_seg00080,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00080.wav,530.4,535.4,conv
-1_dailyconv_seg00081,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00081.wav,535.5,543.2,conv
-1_dailyconv_seg00082,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00082.wav,543.2,552.0,conv
-1_dailyconv_seg00083,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00083.wav,552.4,561.2,conv
-1_dailyconv_seg00084,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00084.wav,561.2,565.1,conv
-1_dailyconv_seg00085,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00085.wav,565.2,571.3,conv
-1_dailyconv_seg00086,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00086.wav,571.3,578.6,conv
-1_dailyconv_seg00087,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00087.wav,578.6,586.8,conv
-1_dailyconv_seg00088,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00088.wav,587.1,589.6,conv
-1_dailyconv_seg00089,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00089.wav,589.6,598.5,conv
-1_dailyconv_seg00090,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00090.wav,598.5,600.0,conv
-1_dailyconv_seg00091,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00091.wav,600.0,608.7,conv
-1_dailyconv_seg00092,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00092.wav,608.7,610.8,conv
-1_dailyconv_seg00093,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00093.wav,610.8,619.6,conv
-1_dailyconv_seg00094,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00094.wav,619.6,622.2,conv
+﻿segment_id,source,file,start,end,speaker,domain
+1_dailyconv_seg00001,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00001.wav,0.5,8.4,Speaker 1,vj
+1_dailyconv_seg00002,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00002.wav,12.7,17.8,Speaker 1,vj
+1_dailyconv_seg00003,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00003.wav,18.2,24.0,Speaker 1,vj
+1_dailyconv_seg00004,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00004.wav,24.2,31.1,Speaker 1,vj
+1_dailyconv_seg00005,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00005.wav,31.1,35.4,Speaker 1,vj
+1_dailyconv_seg00006,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00006.wav,35.4,43.1,Speaker 1,vj
+1_dailyconv_seg00007,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00007.wav,43.5,50.8,Speaker 2,vj
+1_dailyconv_seg00008,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00008.wav,51.0,55.6,Speaker 1,vj
+1_dailyconv_seg00009,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00009.wav,55.7,61.4,Speaker 1,vj
+1_dailyconv_seg00010,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00010.wav,61.5,69.1,Speaker 1,vj
+1_dailyconv_seg00011,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00011.wav,69.4,77.1,Speaker 1,vj
+1_dailyconv_seg00012,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00012.wav,77.2,85.6,Speaker 1,vj
+1_dailyconv_seg00013,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00013.wav,85.6,92.3,Speaker 2,vj
+1_dailyconv_seg00014,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00014.wav,92.3,97.8,Speaker 2,vj
+1_dailyconv_seg00015,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00015.wav,97.8,103.4,Speaker 2,vj
+1_dailyconv_seg00016,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00016.wav,103.5,108.0,Speaker 2,vj
+1_dailyconv_seg00017,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00017.wav,108.0,114.1,Speaker 2,vj
+1_dailyconv_seg00018,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00018.wav,114.1,122.4,Speaker 2,vj
+1_dailyconv_seg00019,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00019.wav,122.4,127.2,Speaker 2,vj
+1_dailyconv_seg00020,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00020.wav,127.2,134.2,Speaker 2,vj
+1_dailyconv_seg00021,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00021.wav,134.7,138.6,Speaker 2,vj
+1_dailyconv_seg00022,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00022.wav,138.7,147.1,Speaker 2,vj
+1_dailyconv_seg00023,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00023.wav,147.1,151.2,Speaker 2,vj
+1_dailyconv_seg00024,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00024.wav,151.2,157.7,Speaker 1,vj
+1_dailyconv_seg00025,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00025.wav,158.1,165.9,Speaker 1,vj
+1_dailyconv_seg00026,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00026.wav,166.4,172.0,Speaker 2,vj
+1_dailyconv_seg00027,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00027.wav,172.2,179.9,Speaker 2,vj
+1_dailyconv_seg00028,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00028.wav,179.9,187.0,Speaker 2,vj
+1_dailyconv_seg00029,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00029.wav,187.0,191.5,Speaker 2,vj
+1_dailyconv_seg00030,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00030.wav,191.6,200.0,Speaker 2,vj
+1_dailyconv_seg00031,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00031.wav,200.0,207.4,Speaker 1,vj
+1_dailyconv_seg00032,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00032.wav,207.8,214.0,Speaker 1,vj
+1_dailyconv_seg00033,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00033.wav,214.3,216.9,Speaker 1,vj
+1_dailyconv_seg00034,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00034.wav,217.2,225.6,Speaker 2,vj
+1_dailyconv_seg00035,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00035.wav,225.9,234.2,Speaker 2,vj
+1_dailyconv_seg00036,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00036.wav,234.2,237.1,Speaker 2,vj
+1_dailyconv_seg00037,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00037.wav,237.1,245.5,Speaker 2,vj
+1_dailyconv_seg00038,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00038.wav,245.5,247.8,Speaker 2,vj
+1_dailyconv_seg00039,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00039.wav,247.8,254.9,Speaker 2,vj
+1_dailyconv_seg00040,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00040.wav,255.3,263.7,Speaker 2,vj
+1_dailyconv_seg00041,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00041.wav,263.7,264.3,Speaker 2,vj
+1_dailyconv_seg00042,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00042.wav,265.1,273.6,Speaker 2,vj
+1_dailyconv_seg00043,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00043.wav,273.6,281.6,Speaker 1,vj
+1_dailyconv_seg00044,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00044.wav,281.8,286.8,Speaker 1,vj
+1_dailyconv_seg00045,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00045.wav,287.4,291.7,Speaker 1,vj
+1_dailyconv_seg00046,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00046.wav,292.1,299.6,Speaker 1,vj
+1_dailyconv_seg00047,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00047.wav,299.8,308.2,Speaker 1,vj
+1_dailyconv_seg00048,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00048.wav,308.2,308.6,Speaker 2,vj
+1_dailyconv_seg00049,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00049.wav,308.8,317.2,Speaker 1,vj
+1_dailyconv_seg00050,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00050.wav,317.2,317.8,Speaker 2,vj
+1_dailyconv_seg00051,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00051.wav,317.8,326.2,Speaker 1,vj
+1_dailyconv_seg00052,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00052.wav,326.2,329.2,Speaker 2,vj
+1_dailyconv_seg00053,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00053.wav,329.2,337.7,Speaker 2,vj
+1_dailyconv_seg00054,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00054.wav,337.8,345.4,Speaker 2,vj
+1_dailyconv_seg00055,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00055.wav,345.4,350.5,Speaker 2,vj
+1_dailyconv_seg00056,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00056.wav,350.5,355.5,Speaker 2,vj
+1_dailyconv_seg00057,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00057.wav,355.6,363.5,Speaker 2,vj
+1_dailyconv_seg00058,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00058.wav,363.5,367.5,Speaker 2,vj
+1_dailyconv_seg00059,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00059.wav,367.5,372.7,Speaker 2,vj
+1_dailyconv_seg00060,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00060.wav,372.7,377.4,Speaker 2,vj
+1_dailyconv_seg00061,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00061.wav,378.0,381.2,Speaker 2,vj
+1_dailyconv_seg00062,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00062.wav,381.5,388.7,Speaker 2,vj
+1_dailyconv_seg00063,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00063.wav,388.9,390.5,Speaker 2,vj
+1_dailyconv_seg00064,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00064.wav,390.5,398.9,Speaker 2,vj
+1_dailyconv_seg00065,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00065.wav,398.9,404.1,Speaker 2,vj
+1_dailyconv_seg00066,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00066.wav,404.1,412.5,Speaker 2,vj
+1_dailyconv_seg00067,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00067.wav,412.5,420.8,Speaker 2,vj
+1_dailyconv_seg00068,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00068.wav,420.8,424.2,Speaker 2,vj
+1_dailyconv_seg00069,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00069.wav,424.2,432.5,Speaker 2,vj
+1_dailyconv_seg00070,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00070.wav,432.5,439.2,Speaker 2,vj
+1_dailyconv_seg00071,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00071.wav,439.3,442.2,Speaker 2,vj
+1_dailyconv_seg00072,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00072.wav,442.6,451.0,Speaker 2,vj
+1_dailyconv_seg00073,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00073.wav,451.0,457.3,Speaker 2,vj
+1_dailyconv_seg00074,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00074.wav,457.3,460.7,Speaker 1,vj
+1_dailyconv_seg00075,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00075.wav,460.7,469.1,Speaker 2,vj
+1_dailyconv_seg00076,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00076.wav,469.1,475.4,Speaker 2,vj
+1_dailyconv_seg00077,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00077.wav,475.9,483.2,Speaker 1,vj
+1_dailyconv_seg00078,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00078.wav,483.2,486.4,Speaker 2,vj
+1_dailyconv_seg00079,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00079.wav,486.4,494.7,Speaker 2,vj
+1_dailyconv_seg00080,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00080.wav,494.7,503.0,Speaker 1,vj
+1_dailyconv_seg00081,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00081.wav,503.0,504.2,Speaker 2,vj
+1_dailyconv_seg00082,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00082.wav,504.2,512.6,Speaker 2,vj
+1_dailyconv_seg00083,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00083.wav,512.6,520.9,Speaker 2,vj
+1_dailyconv_seg00084,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00084.wav,520.9,529.2,Speaker 2,vj
+1_dailyconv_seg00085,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00085.wav,529.2,535.4,Speaker 2,vj
+1_dailyconv_seg00086,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00086.wav,535.5,543.2,Speaker 2,vj
+1_dailyconv_seg00087,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00087.wav,543.2,551.5,Speaker 2,vj
+1_dailyconv_seg00088,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00088.wav,551.5,552.4,Speaker 2,vj
+1_dailyconv_seg00089,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00089.wav,552.4,560.2,Speaker 2,vj
+1_dailyconv_seg00090,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00090.wav,560.2,565.0,Speaker 1,vj
+1_dailyconv_seg00091,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00091.wav,565.2,571.3,Speaker 1,vj
+1_dailyconv_seg00092,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00092.wav,571.3,578.6,Speaker 1,vj
+1_dailyconv_seg00093,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00093.wav,578.6,587.1,Speaker 1,vj
+1_dailyconv_seg00094,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00094.wav,587.2,589.6,Speaker 1,vj
+1_dailyconv_seg00095,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00095.wav,589.6,598.0,Speaker 1,vj
+1_dailyconv_seg00096,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00096.wav,598.0,598.5,Speaker 2,vj
+1_dailyconv_seg00097,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00097.wav,598.5,606.8,Speaker 2,vj
+1_dailyconv_seg00098,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00098.wav,606.8,610.8,Speaker 2,vj
+1_dailyconv_seg00099,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00099.wav,610.8,619.2,Speaker 2,vj
+1_dailyconv_seg00100,1_dailyconv.m4a,C:\Users\bibha\Desktop\git_projects\SegAUD\segments\1_dailyconv\1_dailyconv_seg00100.wav,619.2,622.2,Speaker 1,vj

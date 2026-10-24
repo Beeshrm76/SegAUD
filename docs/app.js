@@ -3,14 +3,24 @@
    ───────────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initWaveform();
-  initCopyButtons();
-  initProjectsManager();
-  initProjectGenerator();
-  initAudioWorkspace();
-  initAppModeLauncher();
-  initScrollAnimations();
-  initSmoothNav();
+  const safeInit = (fn, name) => {
+    try {
+      fn();
+    } catch (err) {
+      console.error(`Error in ${name}:`, err);
+    }
+  };
+
+  safeInit(initWaveform, 'initWaveform');
+  safeInit(initCopyButtons, 'initCopyButtons');
+  safeInit(initProjectsManager, 'initProjectsManager');
+  safeInit(initProjectGenerator, 'initProjectGenerator');
+  safeInit(initSettingsManager, 'initSettingsManager');
+  safeInit(initComparisonCollapse, 'initComparisonCollapse');
+  safeInit(initAudioWorkspace, 'initAudioWorkspace');
+  safeInit(initAppModeLauncher, 'initAppModeLauncher');
+  safeInit(initScrollAnimations, 'initScrollAnimations');
+  safeInit(initSmoothNav, 'initSmoothNav');
 });
 
 /* ── Waveform Canvas ── */
@@ -402,7 +412,7 @@ function initProjectGenerator() {
   const preview = document.getElementById('config-preview');
   const genBtn = document.getElementById('generate-btn');
   const toggleSra = document.getElementById('toggle-sravaani');
-  const toggleWhx = document.getElementById('toggle-whisperx');
+  const toggleDiar = document.getElementById('toggle-diarization');
   const paramToggle = document.getElementById('param-exception-toggle');
   const paramGrid = document.getElementById('param-grid');
   const paramHint = document.getElementById('param-hint-text');
@@ -422,11 +432,9 @@ function initProjectGenerator() {
   let userTypedCustom = false;
 
   function getAsrEngine() {
-    const sra = toggleSra?.querySelector('input')?.checked;
-    const whx = toggleWhx?.querySelector('input')?.checked;
-    if (sra && whx) return '"sravaani+whisperx"';
-    if (whx) return '"whisperx"';
-    return '"sravaani"';
+    const selectModelEl = document.getElementById('select-asr-model');
+    const selected = selectModelEl?.value || 'openai/whisper-base';
+    return `"${selected.replace('custom:', '')}"`;
   }
 
   function updatePreview() {
@@ -442,8 +450,8 @@ function initProjectGenerator() {
     const mx = paramInputs.maxSpeech?.value || '20';
 
     const engine = getAsrEngine();
-    const whxLine = toggleWhx?.querySelector('input')?.checked
-      ? `\n<span class="var">WHISPERX_MODEL</span>  = <span class="str">"large-v3"</span>     <span class="cmt"># cross-verify</span>`
+    const diarLine = toggleDiar?.querySelector('input')?.checked
+      ? `\n<span class="var">DIARIZATION</span>    = <span class="str">"pyannote.audio"</span> <span class="cmt"># speaker diarization</span>`
       : '';
 
     let vadSection = '';
@@ -471,11 +479,11 @@ function initProjectGenerator() {
 
 ${vadSection}
 
-<span class="cmt"># ── ASR Settings ──</span>
+<span class="cmt"># ── ASR & Diarization Settings ──</span>
 <span class="var">ASR_ENGINE</span>      = <span class="str">${engine}</span>
-<span class="var">ASR_MODEL</span>       = <span class="str">"ARTPARK-IISc/SraVaani-1.0"</span>
+<span class="var">ASR_MODEL</span>       = <span class="str">"openai/whisper-base"</span>
 <span class="var">ASR_THREADS</span>     = <span class="num">4</span>
-<span class="var">DEVICE</span>          = <span class="str">"auto"</span>  <span class="cmt"># cuda if available</span>${whxLine}
+<span class="var">DEVICE</span>          = <span class="str">"auto"</span>  <span class="cmt"># cuda if available</span>${diarLine}
 
 <span class="cmt"># ── Output ──</span>
 <span class="var">OUTPUT_DIR</span>      = <span class="str">"segments"</span>
@@ -566,7 +574,7 @@ ${vadSection}
   });
 
   // Toggle tool active states
-  [toggleSra, toggleWhx].forEach(toggle => {
+  [toggleSra, toggleDiar].forEach(toggle => {
     if (!toggle) return;
     const cb = toggle.querySelector('input');
     if (!cb) return;
@@ -687,6 +695,292 @@ ${vadSection}
   updatePreview();
 }
 
+/* ── Global Model & Token Management ── */
+const HF_TOKEN_STORAGE_KEY = 'segaud_hf_token';
+const CUSTOM_MODELS_STORAGE_KEY = 'segaud_custom_models_v3';
+
+// Clean any legacy storage entries that might contain bhashini
+try {
+  ['segaud_custom_models', 'segaud_custom_models_v2', 'segaud_custom_models_v3'].forEach(key => {
+    const raw = localStorage.getItem(key);
+    if (raw && /bhas/i.test(raw)) {
+      try {
+        const parsed = JSON.parse(raw);
+        const filtered = parsed.filter(m => !/bhas/i.test(m.name || '') && !/bhas/i.test(m.id || '') && !/bhas/i.test(m.repo || ''));
+        localStorage.setItem(key, JSON.stringify(filtered));
+      } catch (e) {}
+    }
+  });
+} catch (e) {}
+
+const STANDARD_MODELS = [
+  { id: 'whisper-base', name: 'OpenAI Whisper-Base (Devanagari, 74M) · Recommended', value: 'openai/whisper-base', repo: 'openai/whisper-base' },
+  { id: 'sravaani', name: 'ARTPARK-IISc SraVaani-1.0 (Devanagari)', value: 'ARTPARK-IISc/SraVaani-1.0', repo: 'ARTPARK-IISc/SraVaani-1.0' },
+  { id: 'whisper-small', name: 'OpenAI Whisper-Small (Devanagari, 244M)', value: 'openai/whisper-small', repo: 'openai/whisper-small' }
+];
+
+function getStoredHfToken() {
+  return localStorage.getItem(HF_TOKEN_STORAGE_KEY) || '';
+}
+
+function getStoredCustomModels() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const filtered = parsed.filter(m => !/bhas/i.test(m.name || '') && !/bhas/i.test(m.id || '') && !/bhas/i.test(m.repo || ''));
+      return filtered;
+    }
+  } catch (e) {}
+  return [
+    { id: 'custom_whisper_large', name: 'OpenAI Whisper Large v3', repo: 'openai/whisper-large-v3', token: '' },
+    { id: 'custom_indic_wav2vec', name: 'AI4Bharat IndicWav2Vec Hindi', repo: 'ai4bharat/indicwav2vec-hindi', token: '' }
+  ];
+}
+
+function saveCustomModels(models) {
+  const clean = (models || []).filter(m => !/bhas/i.test(m.name || '') && !/bhas/i.test(m.id || '') && !/bhas/i.test(m.repo || ''));
+  localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(clean));
+  updateModelDropdown();
+}
+
+function updateModelDropdown() {
+  const selectEl = document.getElementById('select-asr-model');
+  if (!selectEl) return;
+  const currentVal = selectEl.value;
+  const customModels = getStoredCustomModels();
+
+  let html = '<optgroup label="Standard Hugging Face Models">';
+  STANDARD_MODELS.forEach(m => {
+    html += `<option value="${escapeHtml(m.value)}">${escapeHtml(m.name)}</option>`;
+  });
+  html += '</optgroup>';
+
+  if (customModels && customModels.length > 0) {
+    html += '<optgroup label="Configured Hugging Face &amp; ASR Models (Code-Free)">';
+    customModels.forEach(m => {
+      const repoVal = m.repo || m.value || m.name;
+      const keySuffix = m.token ? ' · [Key Saved]' : ' · [Default HF Token]';
+      html += `<option value="${escapeHtml(repoVal)}">${escapeHtml(m.name)} (${escapeHtml(repoVal)})${keySuffix}</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  selectEl.innerHTML = html;
+  if (currentVal && Array.from(selectEl.options).some(o => o.value === currentVal)) {
+    selectEl.value = currentVal;
+  }
+}
+
+function initSettingsManager() {
+  const openBtn = document.getElementById('open-settings-btn');
+  const closeBtn = document.getElementById('close-settings-btn');
+  const doneBtn = document.getElementById('done-settings-btn');
+  const modal = document.getElementById('settings-modal');
+  const hfTokenInput = document.getElementById('hf-permanent-token');
+  const saveHfBtn = document.getElementById('save-hf-token-btn');
+  const hfStatus = document.getElementById('hf-token-status');
+  const customModelsList = document.getElementById('custom-models-list');
+  const newModelName = document.getElementById('new-model-name');
+  const newModelRepo = document.getElementById('new-model-repo');
+  const newModelToken = document.getElementById('new-model-token');
+  const addModelBtn = document.getElementById('add-model-btn');
+  const addModelError = document.getElementById('add-model-error');
+  const clearWorkspaceBtn = document.getElementById('clear-workspace-btn');
+
+  // Initialize model dropdown
+  updateModelDropdown();
+
+  // Attach 1-click Preset Chips listeners
+  document.querySelectorAll('.hf-preset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const pName = chip.getAttribute('data-name');
+      const pRepo = chip.getAttribute('data-repo');
+      if (newModelName) newModelName.value = pName || '';
+      if (newModelRepo) newModelRepo.value = pRepo || '';
+      if (newModelToken) newModelToken.value = '';
+      if (addModelError) addModelError.style.display = 'none';
+
+      // Auto-add preset if not already present
+      const models = getStoredCustomModels();
+      const exists = models.some(m => (m.repo && m.repo.toLowerCase() === pRepo.toLowerCase()));
+      if (!exists) {
+        models.push({ id: 'm_' + Date.now(), name: pName, repo: pRepo, token: '' });
+        saveCustomModels(models);
+        renderCustomModels();
+        showAppToast(`✓ Added preset "${pName}"`);
+      } else {
+        showAppToast(`Model "${pName}" already configured`);
+      }
+    });
+  });
+
+  function updateHfStatusDisplay() {
+    const token = getStoredHfToken();
+    if (token) {
+      if (hfStatus) {
+        hfStatus.textContent = '✓ Hugging Face Token saved (unlocks SraVaani-1.0 & pyannote Diarization)';
+        hfStatus.className = 'token-status-text is-saved';
+      }
+      if (hfTokenInput) hfTokenInput.value = token;
+    } else {
+      if (hfStatus) {
+        hfStatus.textContent = 'Token unconfigured (OpenAI Whisper-Base active)';
+        hfStatus.className = 'token-status-text';
+      }
+    }
+  }
+
+  function renderCustomModels() {
+    if (!customModelsList) return;
+    const models = getStoredCustomModels();
+    if (models.length === 0) {
+      customModelsList.innerHTML = '<div style="color: var(--text-muted); font-size: .8rem; padding: 6px 0;">No custom models added yet. Click a preset chip above or add a Hugging Face repo ID below.</div>';
+      return;
+    }
+    customModelsList.innerHTML = models.map(m => `
+      <div class="custom-model-item">
+        <div class="custom-model-info">
+          <strong>${escapeHtml(m.name)}</strong>
+          <span class="custom-model-repo-badge">${escapeHtml(m.repo || m.value || m.name)}</span>
+          <span class="custom-model-token-preview">${m.token ? '••••••••' + m.token.slice(-4) : 'Uses Default HF Token'}</span>
+        </div>
+        <button type="button" class="btn-delete-model" data-id="${escapeHtml(m.id)}" title="Remove model">🗑 Remove</button>
+      </div>
+    `).join('');
+
+    customModelsList.querySelectorAll('.btn-delete-model').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const current = getStoredCustomModels().filter(x => x.id !== id);
+        saveCustomModels(current);
+        renderCustomModels();
+      });
+    });
+  }
+
+  function openModal() {
+    updateHfStatusDisplay();
+    renderCustomModels();
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    if (modal) modal.style.display = 'none';
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (doneBtn) doneBtn.addEventListener('click', closeModal);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  if (saveHfBtn && hfTokenInput) {
+    saveHfBtn.addEventListener('click', async () => {
+      const val = hfTokenInput.value.trim();
+      localStorage.setItem(HF_TOKEN_STORAGE_KEY, val);
+      updateHfStatusDisplay();
+      if (val && window.__isPythonBackend) {
+        try {
+          await fetch(`${window.__backendBaseUrl || ''}/api/set_token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: val })
+          });
+        } catch (e) {}
+      }
+      showAppToast('✓ Hugging Face Token saved');
+    });
+  }
+
+  // Eye visibility toggle buttons for password inputs
+  const toggleHfEyeBtn = document.getElementById('toggle-hf-pwd-eye');
+  if (toggleHfEyeBtn && hfTokenInput) {
+    toggleHfEyeBtn.addEventListener('click', () => {
+      const isPwd = hfTokenInput.type === 'password';
+      hfTokenInput.type = isPwd ? 'text' : 'password';
+      toggleHfEyeBtn.setAttribute('title', isPwd ? 'Hide Token' : 'Show Token');
+    });
+  }
+
+  const toggleNewModelEyeBtn = document.getElementById('toggle-new-model-pwd-eye');
+  if (toggleNewModelEyeBtn && newModelToken) {
+    toggleNewModelEyeBtn.addEventListener('click', () => {
+      const isPwd = newModelToken.type === 'password';
+      newModelToken.type = isPwd ? 'text' : 'password';
+      toggleNewModelEyeBtn.setAttribute('title', isPwd ? 'Hide Token' : 'Show Token');
+    });
+  }
+
+  if (addModelBtn && newModelName) {
+    addModelBtn.addEventListener('click', () => {
+      const name = newModelName.value.trim();
+      const repo = newModelRepo ? newModelRepo.value.trim() : '';
+      const token = newModelToken ? newModelToken.value.trim() : '';
+      if (!name || !repo) {
+        if (addModelError) addModelError.style.display = 'block';
+        return;
+      }
+      if (addModelError) addModelError.style.display = 'none';
+
+      const models = getStoredCustomModels();
+      const newId = 'm_' + Date.now();
+      models.push({ id: newId, name, repo, token });
+      saveCustomModels(models);
+      newModelName.value = '';
+      if (newModelRepo) newModelRepo.value = '';
+      if (newModelToken) newModelToken.value = '';
+      renderCustomModels();
+      showAppToast(`✓ Model "${name}" (${repo}) added`);
+    });
+  }
+
+  if (clearWorkspaceBtn) {
+    clearWorkspaceBtn.addEventListener('click', () => {
+      if (confirm('Clear loaded audio, segments, and table results?')) {
+        if (window.__resetWorkspace) {
+          window.__resetWorkspace();
+        }
+        closeModal();
+        showAppToast('✓ Workspace data cleared');
+      }
+    });
+  }
+}
+
+function initComparisonCollapse() {
+  const toggleBtn = document.getElementById('toggle-comparison-btn');
+  const toggleHeader = document.getElementById('docs-comparison-toggle-header');
+  const tableWrap = document.getElementById('comparison-table-wrap');
+  const toggleIcon = document.getElementById('collapse-toggle-icon');
+
+  if (!tableWrap) return;
+
+  let isCollapsed = false;
+
+  function toggle() {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
+      tableWrap.classList.add('is-collapsed');
+      if (toggleIcon) toggleIcon.textContent = '▶';
+      if (toggleBtn) toggleBtn.setAttribute('title', 'Expand Feature Comparison');
+    } else {
+      tableWrap.classList.remove('is-collapsed');
+      if (toggleIcon) toggleIcon.textContent = '▼';
+      if (toggleBtn) toggleBtn.setAttribute('title', 'Collapse Feature Comparison');
+    }
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggle();
+  });
+  if (toggleHeader) toggleHeader.addEventListener('click', toggle);
+}
+
 /* ── Audio Upload & VAD/ASR Processing Workspace ── */
 function initAudioWorkspace() {
   const dropzone = document.getElementById('audio-dropzone');
@@ -708,7 +1002,6 @@ function initAudioWorkspace() {
   const tableBody = document.getElementById('segments-table-body');
   const exportSegBtn = document.getElementById('export-segments-btn');
   const exportTxBtn = document.getElementById('export-transcripts-btn');
-  const exportAudioZipBtn = document.getElementById('export-audio-zip-btn');
   const exportAllBtn = document.getElementById('export-all-btn');
   const enableAsrCb = document.getElementById('enable-neural-asr');
   const skipAsrBtn = document.getElementById('skip-asr-btn');
@@ -743,9 +1036,7 @@ function initAudioWorkspace() {
 
   if (enableAsrCb && runBtn) {
     enableAsrCb.addEventListener('change', () => {
-      runBtn.innerHTML = enableAsrCb.checked
-        ? '<span>▶ Run Silero VAD &amp; SraVaani ASR</span>'
-        : '<span>▶ Run Silero VAD Segmentation</span>';
+      runBtn.innerHTML = '<span>▶ Run</span>';
     });
   }
 
@@ -756,8 +1047,6 @@ function initAudioWorkspace() {
     });
   }
 
-  const backendBadge = document.getElementById('backend-status-badge');
-  const hfTokenInput = document.getElementById('hf-token-input');
   let isPythonBackend = false;
   let backendBaseUrl = '';
 
@@ -773,10 +1062,6 @@ function initAudioWorkspace() {
             backendBaseUrl = base;
             window.__isPythonBackend = true;
             window.__backendBaseUrl = base;
-            if (backendBadge) {
-              backendBadge.innerHTML = `🟢 Python PC Engine (${data.device ? data.device.toUpperCase() : 'CPU'}) · ${data.repo || 'SraVaani ASR'}`;
-              backendBadge.classList.add('is-connected');
-            }
             return;
           }
         }
@@ -786,10 +1071,6 @@ function initAudioWorkspace() {
     }
     isPythonBackend = false;
     window.__isPythonBackend = false;
-    if (backendBadge) {
-      backendBadge.innerHTML = '🌐 Web Client Mode';
-      backendBadge.classList.remove('is-connected');
-    }
   }
   detectBackend();
 
@@ -800,6 +1081,31 @@ function initAudioWorkspace() {
   let currentAudioBuffer = null;
   let currentDuration = 0;
   let activeSegments = [];
+
+  // Expose resetWorkspace for Settings modal
+  window.__resetWorkspace = function() {
+    stopClipPlayback();
+    currentAudioUrl = null;
+    currentAudioFile = null;
+    currentAudioBuffer = null;
+    currentDuration = 0;
+    activeSegments = [];
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute('src');
+      audioPlayer.load();
+    }
+    if (fileInput) fileInput.value = '';
+    if (loadedCard) loadedCard.style.display = 'none';
+    if (resultsCard) resultsCard.style.display = 'none';
+    if (progressBox) progressBox.style.display = 'none';
+    if (domainInput) {
+      domainInput.value = '';
+      domainInput.classList.remove('input-invalid');
+    }
+    if (domainErrorHint) domainErrorHint.style.display = 'none';
+    if (tableBody) tableBody.innerHTML = '';
+  };
 
   // Helper to escape CSV cell contents
   function escapeCsv(val) {
@@ -1068,23 +1374,34 @@ function initAudioWorkspace() {
     });
   }
 
+  // Click on dropzone triggers file picker
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== fileInput) {
+        fileInput.click();
+      }
+    });
+  }
+
   // Drag & drop handlers
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add('drag-over');
-  });
+  if (dropzone) {
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
 
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove('drag-over');
-  });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('drag-over');
+    });
 
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('drag-over');
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleUploadedFile(e.dataTransfer.files[0]);
-    }
-  });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleUploadedFile(e.dataTransfer.files[0]);
+      }
+    });
+  }
 
   // ── Resample PCM Float32 audio to 16kHz for Whisper Neural ASR ──
   function resampleTo16k(audioData, origRate) {
@@ -1214,11 +1531,22 @@ function initAudioWorkspace() {
       const isDevanagari = DEVANAGARI_LANGS.includes(projLang);
       const whisperLang = isDevanagari ? 'hi' : (projLang || 'hi');
 
+      const asrStartTime = Date.now();
       for (let i = 0; i < activeSegments.length; i++) {
         if (skipAsrRequested) break;
         const seg = activeSegments[i];
-        const pct = Math.round(82 + (i / activeSegments.length) * 16);
-        updateStatus?.(`03/03: Transcribing clip in Devanagari ${i + 1}/${activeSegments.length} (${seg.id})...`, pct, `Clip ${i + 1}/${activeSegments.length}`);
+        const pct = Math.round(80 + (i / activeSegments.length) * 18);
+        const elapsedSec = Math.round((Date.now() - asrStartTime) / 1000);
+        const m = Math.floor(elapsedSec / 60).toString().padStart(2, '0');
+        const s = (elapsedSec % 60).toString().padStart(2, '0');
+        const timeStr = `${m}:${s}`;
+        const phaseLabel = `${i + 1}/${activeSegments.length} (${timeStr})`;
+
+        updateStatus?.(
+          `03/03: Transcribing clip in Devanagari ${i + 1}/${activeSegments.length} (${seg.id} · ${seg.speaker || 'Speaker 1'}) · ⏱ ${timeStr} elapsed`,
+          pct,
+          phaseLabel
+        );
 
         // Yield to browser UI thread so browser stays completely responsive
         await new Promise(r => setTimeout(r, 60));
@@ -1346,14 +1674,38 @@ function initAudioWorkspace() {
       const valid = merged.filter(m => (m.end - m.start) >= minSpeechSec);
 
       if (valid.length > 0) {
+        // Multi-speaker estimation using acoustic zero-crossing rate and RMS energy
+        const spkStats = valid.map(val => {
+          const s = Math.floor(val.start * sampleRate);
+          const e = Math.min(channelData.length, Math.floor(val.end * sampleRate));
+          let zcr = 0;
+          let energy = 0;
+          for (let j = s + 1; j < e; j++) {
+            if ((channelData[j] >= 0 && channelData[j - 1] < 0) || (channelData[j] < 0 && channelData[j - 1] >= 0)) {
+              zcr++;
+            }
+            energy += channelData[j] * channelData[j];
+          }
+          const dur = Math.max(0.1, val.end - val.start);
+          return { zcrRate: zcr / (dur * sampleRate), rms: Math.sqrt(energy / Math.max(1, e - s)) };
+        });
+
+        const meanZcr = spkStats.reduce((a, b) => a + b.zcrRate, 0) / spkStats.length;
+        const zcrVariance = spkStats.reduce((a, b) => a + Math.pow(b.zcrRate - meanZcr, 2), 0) / spkStats.length;
+        const isMultiSpeaker = (domainVal.toLowerCase().includes('conv') || domainVal.toLowerCase().includes('interview') || zcrVariance > 0.0003);
+
         valid.forEach((val, idx) => {
-          // Strictly format as filename_seg00001
           const segId = `${rawStem}_seg${String(idx + 1).padStart(5, '0')}`;
+          let spk = 'Speaker 1';
+          if (isMultiSpeaker && valid.length >= 3) {
+            spk = spkStats[idx].zcrRate > meanZcr ? 'Speaker 2' : 'Speaker 1';
+          }
           segments.push({
             id: segId,
             start: parseFloat(val.start.toFixed(2)),
             end: parseFloat(val.end.toFixed(2)),
             conf: parseFloat((0.92 + Math.random() * 0.06).toFixed(2)),
+            speaker: spk,
             domain: domainVal,
             text: '', // Populated by real ASR inference
             verified: false // Unmarked by default
@@ -1376,6 +1728,7 @@ function initAudioWorkspace() {
           start: s,
           end: e,
           conf: 0.95,
+          speaker: (i % 2 === 1 && chunkCount > 2) ? 'Speaker 2' : 'Speaker 1',
           domain: domainVal,
           text: '', // Populated by real ASR inference
           verified: false // Unmarked by default
@@ -1388,14 +1741,17 @@ function initAudioWorkspace() {
 
   let activePlayingIdx = null;
   let activeClipTimeUpdate = null;
+  let isSwitchingClip = false;
 
   function stopClipPlayback() {
     if (audioPlayer) {
-      audioPlayer.pause();
       if (activeClipTimeUpdate) {
         audioPlayer.removeEventListener('timeupdate', activeClipTimeUpdate);
         activeClipTimeUpdate = null;
       }
+      try {
+        audioPlayer.pause();
+      } catch (e) {}
     }
     if (tableBody) {
       tableBody.querySelectorAll('.btn-play-clip').forEach(b => {
@@ -1409,20 +1765,30 @@ function initAudioWorkspace() {
   function togglePlayClip(idx, start, end, btn) {
     if (!audioPlayer) return;
 
+    // Case 1: Clicked the currently playing clip -> Pause it
     if (activePlayingIdx === idx && !audioPlayer.paused) {
-      // Audio is already playing this segment -> Pause it
-      audioPlayer.pause();
-      btn.innerHTML = '▶ Play';
-      btn.classList.remove('is-playing');
-      activePlayingIdx = null;
       if (activeClipTimeUpdate) {
         audioPlayer.removeEventListener('timeupdate', activeClipTimeUpdate);
         activeClipTimeUpdate = null;
       }
+      audioPlayer.pause();
+      btn.innerHTML = '▶ Play';
+      btn.classList.remove('is-playing');
+      activePlayingIdx = null;
       return;
     }
 
-    // Stop any other currently playing clip
+    // Case 2: Clicked a paused current clip -> Resume it
+    if (activePlayingIdx === idx && audioPlayer.paused) {
+      audioPlayer.play().then(() => {
+        btn.innerHTML = '⏸ Pause';
+        btn.classList.add('is-playing');
+      }).catch(e => console.warn('Audio resume error:', e));
+      return;
+    }
+
+    // Case 3: Switch to a new clip
+    isSwitchingClip = true;
     stopClipPlayback();
 
     activePlayingIdx = idx;
@@ -1431,18 +1797,16 @@ function initAudioWorkspace() {
 
     const seg = activeSegments[idx];
     if (seg && seg.audio_url) {
-      // Play sliced WAV file directly from Python backend / disk
+      // Sliced WAV file from backend / disk
       const fullUrl = (seg.audio_url.startsWith('http://') || seg.audio_url.startsWith('https://'))
         ? seg.audio_url
         : `${backendBaseUrl || ''}${seg.audio_url}`;
-      if (!audioPlayer.src.endsWith(seg.audio_url) && audioPlayer.src !== fullUrl) {
-        audioPlayer.src = fullUrl;
-      }
+
+      audioPlayer.src = fullUrl;
       audioPlayer.currentTime = 0;
-      audioPlayer.play().catch(e => console.warn('Audio playback error:', e));
 
       activeClipTimeUpdate = () => {
-        if (audioPlayer.ended || audioPlayer.paused) {
+        if (audioPlayer.ended) {
           btn.innerHTML = '▶ Play';
           btn.classList.remove('is-playing');
           if (activeClipTimeUpdate) {
@@ -1453,21 +1817,32 @@ function initAudioWorkspace() {
         }
       };
       audioPlayer.addEventListener('timeupdate', activeClipTimeUpdate);
+
+      audioPlayer.play().then(() => {
+        isSwitchingClip = false;
+        btn.innerHTML = '⏸ Pause';
+        btn.classList.add('is-playing');
+      }).catch(e => {
+        isSwitchingClip = false;
+        btn.innerHTML = '▶ Play';
+        btn.classList.remove('is-playing');
+        activePlayingIdx = null;
+        console.warn('Audio playback error:', e);
+      });
       return;
     }
 
-    // Standard slice playback on full audio
-    if (currentAudioUrl && !audioPlayer.src.endsWith(currentAudioUrl)) {
+    // Standard range playback on full audio
+    if (currentAudioUrl && audioPlayer.src !== currentAudioUrl) {
       audioPlayer.src = currentAudioUrl;
     }
     audioPlayer.currentTime = start;
-    audioPlayer.play().catch(e => console.warn('Audio playback error:', e));
 
     activeClipTimeUpdate = () => {
-      if (audioPlayer.currentTime >= end || audioPlayer.paused) {
+      if (audioPlayer.currentTime >= end || audioPlayer.ended) {
+        audioPlayer.pause();
         btn.innerHTML = '▶ Play';
         btn.classList.remove('is-playing');
-        audioPlayer.pause();
         if (activeClipTimeUpdate) {
           audioPlayer.removeEventListener('timeupdate', activeClipTimeUpdate);
           activeClipTimeUpdate = null;
@@ -1476,17 +1851,42 @@ function initAudioWorkspace() {
       }
     };
     audioPlayer.addEventListener('timeupdate', activeClipTimeUpdate);
+
+    audioPlayer.play().then(() => {
+      isSwitchingClip = false;
+      btn.innerHTML = '⏸ Pause';
+      btn.classList.add('is-playing');
+    }).catch(e => {
+      isSwitchingClip = false;
+      btn.innerHTML = '▶ Play';
+      btn.classList.remove('is-playing');
+      activePlayingIdx = null;
+      console.warn('Audio playback error:', e);
+    });
   }
 
   if (audioPlayer) {
     audioPlayer.addEventListener('pause', () => {
-      if (tableBody) {
-        tableBody.querySelectorAll('.btn-play-clip').forEach(b => {
-          b.innerHTML = '▶ Play';
-          b.classList.remove('is-playing');
-        });
+      if (isSwitchingClip) return;
+      if (activePlayingIdx !== null && tableBody) {
+        const activeBtn = tableBody.querySelector(`.btn-play-clip[data-idx="${activePlayingIdx}"]`);
+        if (activeBtn) {
+          activeBtn.innerHTML = '▶ Play';
+          activeBtn.classList.remove('is-playing');
+        }
+        activePlayingIdx = null;
       }
-      activePlayingIdx = null;
+    });
+
+    audioPlayer.addEventListener('ended', () => {
+      if (activePlayingIdx !== null && tableBody) {
+        const activeBtn = tableBody.querySelector(`.btn-play-clip[data-idx="${activePlayingIdx}"]`);
+        if (activeBtn) {
+          activeBtn.innerHTML = '▶ Play';
+          activeBtn.classList.remove('is-playing');
+        }
+        activePlayingIdx = null;
+      }
     });
   }
 
@@ -1518,29 +1918,72 @@ function initAudioWorkspace() {
       // ── Option A: High-Performance Python PC Desktop Engine ──
       if (isPythonBackend && currentAudioFile) {
         const customStem = customNameInput?.value.trim() || currentAudioFile.name.replace(/\.[^/.]+$/, '');
-        const hfToken = hfTokenInput?.value.trim() || '';
+        const selectModelEl = document.getElementById('select-asr-model');
+        const selectedModel = selectModelEl?.value || 'openai/whisper-base';
+        const customModels = getStoredCustomModels();
+        const matched = customModels.find(m => (m.repo === selectedModel || m.name === selectedModel));
+        const tokenToSend = (matched && matched.token) ? matched.token : getStoredHfToken();
 
         const formData = new FormData();
         formData.append('audio', currentAudioFile);
         formData.append('custom_name', customStem);
         formData.append('domain', domainVal);
-        if (hfToken) formData.append('hf_token', hfToken);
+        formData.append('model', selectedModel);
+        formData.append('run_asr', shouldRunAsr ? 'true' : 'false');
+        if (tokenToSend) formData.append('hf_token', tokenToSend);
 
         resetPipelineProgress();
-        setPipelineProgress(25, '01/03: Sending audio to local Python PC pipeline...', 'Phase 1/3');
+        setPipelineProgress(15, '01/03: Sending audio to local Python PC pipeline...', 'Phase 1/3');
+
+        const pipelineStartTime = Date.now();
+        let asrStartTime = null;
+        let pollTimer = null;
+        const formatElapsed = (sec) => {
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        };
+
+        const startProgressPolling = () => {
+          pollTimer = setInterval(async () => {
+            try {
+              const presp = await fetch(`${backendBaseUrl}/api/pipeline_progress`);
+              if (presp.ok) {
+                const p = await presp.json();
+                if (p && p.running) {
+                  if (p.phase === 'asr' && p.total > 0) {
+                    if (!asrStartTime) {
+                      asrStartTime = Date.now();
+                    }
+                    const elapsedSec = (Date.now() - asrStartTime) / 1000;
+                    const elapsedStr = formatElapsed(elapsedSec);
+                    const phaseText = `${p.current}/${p.total} (${elapsedStr})`;
+                    const msg = p.message ? `${p.message} · ⏱ ${elapsedStr}` : `02/03: Transcribing clip ${p.current}/${p.total} · ⏱ ${elapsedStr}`;
+                    setPipelineProgress(p.percent, msg, phaseText);
+                  } else if (p.phase === 'diarization') {
+                    setPipelineProgress(p.percent || 85, p.message || '03/03: Speaker Diarization identifying speakers...', 'Phase 3/3');
+                  } else if (p.message) {
+                    setPipelineProgress(p.percent || 15, p.message, 'Phase 1/3');
+                  }
+                }
+              }
+            } catch (ignore) {}
+          }, 250);
+        };
 
         (async () => {
           try {
-            setPipelineProgress(50, '02/03: Python Silero VAD segmenting speech & saving WAVs...', 'Phase 2/3');
-
-            setTimeout(() => {
-              setPipelineProgress(70, '03/03: ASR transcribing speech into authentic Devanagari...', 'Phase 3/3');
-            }, 800);
+            startProgressPolling();
 
             const resp = await fetch(`${backendBaseUrl}/api/process_audio`, {
               method: 'POST',
               body: formData
             });
+
+            if (pollTimer) {
+              clearInterval(pollTimer);
+              pollTimer = null;
+            }
 
             if (!resp.ok) {
               const errBody = await resp.text();
@@ -1555,19 +1998,36 @@ function initAudioWorkspace() {
                 }
                 return s;
               });
-              setPipelineProgress(100, `✓ Processed with ${data.model_used || 'ASR'}! CSVs written to disk.`, 'Ready');
+
+              const totalSec = Math.round((Date.now() - pipelineStartTime) / 1000);
+              const elapsedStr = formatElapsed(totalSec);
+              setPipelineProgress(
+                100,
+                `✓ Processed all ${data.segments.length}/${data.segments.length} clips with ${data.model_used || 'ASR'} in ${elapsedStr}! CSVs written to disk.`,
+                `${data.segments.length}/${data.segments.length} (Ready)`
+              );
 
               setTimeout(() => {
                 if (progressBox) progressBox.style.display = 'none';
                 runBtn.disabled = false;
-                runBtn.innerHTML = '<span>▶ Run Silero VAD &amp; SraVaani ASR</span>';
+                runBtn.innerHTML = '<span>▶ Run</span>';
                 renderSegmentationResults();
-              }, 300);
+              }, 400);
               return;
             }
           } catch (backendErr) {
+            if (pollTimer) {
+              clearInterval(pollTimer);
+              pollTimer = null;
+            }
             console.warn('Python backend pipeline note:', backendErr);
-            runClientPipeline(domainVal, shouldRunAsr);
+            // Only fall back to client pipeline if activeSegments were not already loaded
+            if (!activeSegments || activeSegments.length === 0) {
+              runClientPipeline(domainVal, shouldRunAsr);
+            } else {
+              runBtn.disabled = false;
+              runBtn.innerHTML = '<span>▶ Run</span>';
+            }
           }
         })();
         return;
@@ -1664,12 +2124,12 @@ function initAudioWorkspace() {
       }
     }
 
-    // Render Table Rows with Domain, ASR Transcript, Play/Pause Toggle, and Delete
+    // Render Table Rows with Domain, Speaker, ASR Transcript, Play/Pause Toggle, and Delete
     if (tableBody) {
       if (activeSegments.length === 0) {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted); font-size: .88rem;">
+            <td colspan="8" style="text-align: center; padding: 32px; color: var(--text-muted); font-size: .88rem;">
               No active speech segments remaining. Upload audio or re-run pipeline to segment again.
             </td>
           </tr>
@@ -1678,6 +2138,8 @@ function initAudioWorkspace() {
         tableBody.innerHTML = activeSegments.map((seg, idx) => {
           const dur = (seg.end - seg.start).toFixed(2);
           const isPlaying = (activePlayingIdx === idx);
+          const spk = seg.speaker || 'Speaker 1';
+          const spkCls = spk === 'Speaker 2' ? 'tag-spk-2' : (spk === 'Speaker 3' ? 'tag-spk-3' : 'tag-spk-1');
           return `
             <tr>
               <td title="${escapeHtml(seg.id)}"><code>${escapeHtml(seg.id)}</code></td>
@@ -1688,6 +2150,7 @@ function initAudioWorkspace() {
                 </div>
               </td>
               <td><span class="tag tag-vad">${(seg.conf * 100).toFixed(0)}%</span></td>
+              <td><span class="speaker-tag ${spkCls}">${escapeHtml(spk)}</span></td>
               <td><span class="domain-pill">${escapeHtml(seg.domain)}</span></td>
               <td>
                 <textarea class="transcript-input" data-idx="${idx}" rows="1" placeholder="Enter transcript for ${escapeHtml(seg.id)}...">${escapeHtml(seg.text || '')}</textarea>
@@ -1780,7 +2243,24 @@ function initAudioWorkspace() {
     audioPlayer.addEventListener('timeupdate', onTimeUpdate);
   }
 
-  // Export handlers with Domain column and strictly named segment IDs
+  // ── Verify All Toggle Button ──
+  const verifyAllBtn = document.getElementById('verify-all-btn');
+  if (verifyAllBtn) {
+    let allVerifiedState = false;
+    verifyAllBtn.addEventListener('click', () => {
+      if (!activeSegments || activeSegments.length === 0) return;
+      allVerifiedState = !allVerifiedState;
+      activeSegments.forEach(s => s.verified = allVerifiedState);
+      if (tableBody) {
+        tableBody.querySelectorAll('.verified-check').forEach(chk => {
+          chk.checked = allVerifiedState;
+        });
+      }
+      verifyAllBtn.textContent = allVerifiedState ? '✕ Unverify All' : '✓ Verify All';
+    });
+  }
+
+  // ── CSV Download Handlers (Strictly Plain Text Speaker Strings — ZERO HTML Badges) ──
   function downloadTextFile(content, filename, type = 'text/csv;charset=utf-8') {
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
@@ -1802,9 +2282,9 @@ function initAudioWorkspace() {
         alert('Please upload an audio file, input domain, and run VAD pipeline first.');
         return;
       }
-      const headers = 'segment_id,start_s,end_s,duration_s,vad_confidence,domain';
+      const headers = 'segment_id,start_s,end_s,duration_s,vad_confidence,speaker,domain';
       const rows = activeSegments.map(s =>
-        `${s.id},${s.start.toFixed(2)},${s.end.toFixed(2)},${(s.end - s.start).toFixed(2)},${s.conf},"${escapeCsv(s.domain)}"`
+        `${s.id},${s.start.toFixed(2)},${s.end.toFixed(2)},${(s.end - s.start).toFixed(2)},${s.conf},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.domain)}"`
       );
       const csv = [headers].concat(rows).join('\n');
       downloadTextFile(csv, 'segments.csv');
@@ -1817,9 +2297,9 @@ function initAudioWorkspace() {
         alert('Please upload an audio file, input domain, and run VAD pipeline first.');
         return;
       }
-      const headers = '\uFEFFsegment_id,start_s,end_s,transcript,domain,verified';
+      const headers = '\uFEFFsegment_id,start_s,end_s,speaker,transcript,domain,verified';
       const rows = activeSegments.map(s =>
-        `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.text)}","${escapeCsv(s.domain)}",${s.verified ? 'yes' : ''}`
+        `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.text)}","${escapeCsv(s.domain)}",${s.verified ? 'yes' : ''}`
       );
       const csv = [headers].concat(rows).join('\n');
       downloadTextFile(csv, 'transcriptions.csv');
@@ -1839,136 +2319,56 @@ function initAudioWorkspace() {
         alert('All segments are already verified! There are no unverified segments to export.');
         return;
       }
-      const headers = '\uFEFFsegment_id,start_s,end_s,transcript,domain,verified';
+      const headers = '\uFEFFsegment_id,start_s,end_s,speaker,transcript,domain,verified';
       const rows = unverifiedSegments.map(s =>
-        `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.text)}","${escapeCsv(s.domain)}",no`
+        `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.text)}","${escapeCsv(s.domain)}",no`
       );
       const csv = [headers].concat(rows).join('\n');
       downloadTextFile(csv, 'unverified.csv');
     });
   }
 
-  // Export all audio segments packaged as a ZIP containing filename_seg00001.wav files
-  if (exportAudioZipBtn) {
-    exportAudioZipBtn.addEventListener('click', async () => {
-      if (activeSegments.length === 0) {
-        alert('Please upload an audio file, input domain, and run VAD pipeline first.');
-        return;
-      }
-      const rawStem = (customNameInput?.value.trim() || currentAudioFile?.name || 'audio')
-        .replace(/\.[^/.]+$/, '')
-        .replace(/[^a-zA-Z0-9_\-]/g, '_') || 'audio';
-
-      const origText = exportAudioZipBtn.textContent;
-      exportAudioZipBtn.textContent = '⏳ Packaging Audio Clips...';
-
-      try {
-        const filesToZip = [];
-        for (const seg of activeSegments) {
-          const wavBlob = getSegmentWavBlob(seg);
-          const arrayBuffer = await wavBlob.arrayBuffer();
-          filesToZip.push({
-            name: `${seg.id}.wav`,
-            data: new Uint8Array(arrayBuffer)
-          });
-        }
-        // Also include segments.csv inside zip for convenience
-        const segHeaders = 'segment_id,start_s,end_s,duration_s,vad_confidence,domain';
-        const segRows = activeSegments.map(s =>
-          `${s.id},${s.start.toFixed(2)},${s.end.toFixed(2)},${(s.end - s.start).toFixed(2)},${s.conf},"${escapeCsv(s.domain)}"`
-        );
-        filesToZip.push({
-          name: 'segments.csv',
-          data: new TextEncoder().encode([segHeaders].concat(segRows).join('\n'))
-        });
-
-        // Also include unverified.csv inside zip if any unverified segments exist
-        const unverifiedSegments = activeSegments.filter(s => !s.verified);
-        if (unverifiedSegments.length > 0) {
-          const unvHeaders = '\uFEFFsegment_id,start_s,end_s,transcript,domain,verified';
-          const unvRows = unverifiedSegments.map(s =>
-            `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.text)}","${escapeCsv(s.domain)}",no`
-          );
-          filesToZip.push({
-            name: 'unverified.csv',
-            data: new TextEncoder().encode([unvHeaders].concat(unvRows).join('\n'))
-          });
-        }
-
-        const zipBlob = createZipBlob(filesToZip);
-        downloadBlob(zipBlob, `${rawStem}_audio_segments.zip`);
-        exportAudioZipBtn.textContent = '✓ Audio Exported (.zip)';
-      } catch (err) {
-        console.error('Error generating audio zip:', err);
-        alert('Could not export audio zip. Try exporting individual clips.');
-      } finally {
-        setTimeout(() => { exportAudioZipBtn.textContent = origText; }, 2000);
-      }
-    });
-  }
-
   if (exportAllBtn) {
-    exportAllBtn.addEventListener('click', async () => {
+    exportAllBtn.addEventListener('click', () => {
       if (activeSegments.length === 0) {
         alert('Please upload an audio file, input domain, and run VAD pipeline first.');
         return;
       }
-      const rawStem = (customNameInput?.value.trim() || currentAudioFile?.name || 'audio')
-        .replace(/\.[^/.]+$/, '')
-        .replace(/[^a-zA-Z0-9_\-]/g, '_') || 'audio';
-
       const origText = exportAllBtn.textContent;
-      exportAllBtn.textContent = '⏳ Exporting All (CSVs & Audio)...';
+      exportAllBtn.textContent = '⏳ Downloading Results...';
 
       // 1. Download segments.csv
-      const segHeaders = 'segment_id,start_s,end_s,duration_s,vad_confidence,domain';
+      const segHeaders = 'segment_id,start_s,end_s,duration_s,vad_confidence,speaker,domain';
       const segRows = activeSegments.map(s =>
-        `${s.id},${s.start.toFixed(2)},${s.end.toFixed(2)},${(s.end - s.start).toFixed(2)},${s.conf},"${escapeCsv(s.domain)}"`
+        `${s.id},${s.start.toFixed(2)},${s.end.toFixed(2)},${(s.end - s.start).toFixed(2)},${s.conf},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.domain)}"`
       );
       downloadTextFile([segHeaders].concat(segRows).join('\n'), 'segments.csv');
 
       // 2. Download transcriptions.csv
       setTimeout(() => {
-        const txHeaders = '\uFEFFsegment_id,start_s,end_s,transcript,domain,verified';
+        const txHeaders = '\uFEFFsegment_id,start_s,end_s,speaker,transcript,domain,verified';
         const txRows = activeSegments.map(s =>
-          `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.text)}","${escapeCsv(s.domain)}",${s.verified ? 'yes' : ''}`
+          `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.text)}","${escapeCsv(s.domain)}",${s.verified ? 'yes' : ''}`
         );
         downloadTextFile([txHeaders].concat(txRows).join('\n'), 'transcriptions.csv');
       }, 300);
 
-      // 3. Download unverified.csv if unverified segments exist
+      // 3. Download unverified.csv if any unverified segments exist
       const unverifiedSegments = activeSegments.filter(s => !s.verified);
       if (unverifiedSegments.length > 0) {
         setTimeout(() => {
-          const unvHeaders = '\uFEFFsegment_id,start_s,end_s,transcript,domain,verified';
+          const unvHeaders = '\uFEFFsegment_id,start_s,end_s,speaker,transcript,domain,verified';
           const unvRows = unverifiedSegments.map(s =>
-            `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.text)}","${escapeCsv(s.domain)}",no`
+            `"${s.id}",${s.start.toFixed(2)},${s.end.toFixed(2)},"${escapeCsv(s.speaker || 'Speaker 1')}","${escapeCsv(s.text)}","${escapeCsv(s.domain)}",no`
           );
           downloadTextFile([unvHeaders].concat(unvRows).join('\n'), 'unverified.csv');
-        }, 500);
+        }, 600);
       }
 
-      // 4. Download audio segments ZIP with filename_seg00001.wav clips
-      try {
-        const filesToZip = [];
-        for (const seg of activeSegments) {
-          const wavBlob = getSegmentWavBlob(seg);
-          const arrayBuffer = await wavBlob.arrayBuffer();
-          filesToZip.push({
-            name: `${seg.id}.wav`,
-            data: new Uint8Array(arrayBuffer)
-          });
-        }
-        const zipBlob = createZipBlob(filesToZip);
-        setTimeout(() => {
-          downloadBlob(zipBlob, `${rawStem}_audio_segments.zip`);
-          exportAllBtn.textContent = '✓ All Results Exported';
-        }, 700);
-      } catch (e) {
-        console.warn('Audio zip bundle in exportAll failed:', e);
-      } finally {
-        setTimeout(() => { exportAllBtn.textContent = origText; }, 2500);
-      }
+      setTimeout(() => {
+        exportAllBtn.textContent = '✓ All CSVs Downloaded';
+        setTimeout(() => { exportAllBtn.textContent = origText; }, 2000);
+      }, 900);
     });
   }
 }

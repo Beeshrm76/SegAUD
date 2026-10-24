@@ -15,9 +15,8 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0b0f" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 <body>
   <!-- ───────────────────── NAV ───────────────────── -->
@@ -33,6 +32,7 @@
         <li><a href="#docs">Documentation</a></li>
       </ul>
       <div class="nav-actions">
+        <button class="btn btn-sm btn-settings-icon" id="open-settings-btn" title="Settings" aria-label="Settings">⚙️</button>
         <button class="btn btn-sm btn-download-nav" id="open-app-nav-btn" title="Open SegAUD in dedicated standalone window">
           <span class="app-icon">↔</span> Open in app
         </button>
@@ -52,9 +52,8 @@
         <h1>Audio Segmentation &amp; Transcription <span class="gradient-text">for Low-Resource Languages</span></h1>
         <p class="hero-sub">
           SegAUD combines <strong>Silero VAD</strong> for precise speech detection with
-          <strong>SraVaani ASR</strong> for multilingual transcription — purpose-built for
-          <em>low-resource languages</em>, with future <strong>WhisperX</strong>
-          cross-verification on the roadmap.
+          <strong>Devanagari ASR</strong> and <strong>pyannote.audio</strong> speaker diarization
+          for multi-speaker turn splitting.
         </p>
         <div class="hero-actions">
           <a href="#projects" class="btn btn-primary" id="get-started-btn">Project</a>
@@ -115,12 +114,12 @@
           <h3>SraVaani ASR</h3>
           <p>Each segment transcribed using ARTPARK-IISc/SraVaani-1.0 with <code>torch.inference_mode()</code>. Supports 20+ low-resource languages.</p>
         </div>
-        <div class="pipeline-arrow future-arrow">⋯</div>
-        <div class="pipeline-step future">
-          <div class="step-icon">🔍</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-icon">👥</div>
           <div class="step-num">04</div>
-          <h3>WhisperX <span class="roadmap-tag">Roadmap</span></h3>
-          <p>Cross-verify ASR output with WhisperX for word-level timestamps and improved accuracy on code-mixed speech.</p>
+          <h3>pyannote Diarization</h3>
+          <p>Detect speaker turns and split segments where multiple people talk, tagging each with Speaker 1 / Speaker 2.</p>
         </div>
       </div>
     </div>
@@ -242,15 +241,10 @@
                 <span class="toggle-label">Silero VAD</span>
                 <span class="toggle-tag required">Required</span>
               </label>
-              <label class="toggle-item active" id="toggle-sravaani">
+              <label class="toggle-item active" id="toggle-diarization">
                 <input type="checkbox" checked />
-                <span class="toggle-label">SraVaani ASR</span>
+                <span class="toggle-label">PyAnnote Diarization</span>
                 <span class="toggle-tag">Enabled</span>
-              </label>
-              <label class="toggle-item" id="toggle-whisperx">
-                <input type="checkbox" />
-                <span class="toggle-label">WhisperX</span>
-                <span class="toggle-tag roadmap">Coming Soon</span>
               </label>
             </div>
           </div>
@@ -264,37 +258,43 @@
               </label>
             </div>
             <p class="param-hint-text" id="param-hint-text">Standard pipeline defaults are active. Enable exception mode only to apply parameter overrides for edge-case audio.</p>
-            <div class="param-grid locked-grid" id="param-grid">
-              <div class="param-item">
-                <span class="param-name">threshold</span>
-                <input type="number" value="0.5" step="0.05" min="0" max="1" id="param-threshold" disabled />
-                <span class="param-badge">default: 0.5</span>
+            <div class="param-scroll-slider-wrap" id="param-scroll-wrap">
+              <div class="param-grid locked-grid" id="param-grid">
+                <div class="param-item">
+                  <span class="param-name">threshold</span>
+                  <input type="number" value="0.5" step="0.05" min="0" max="1" id="param-threshold" disabled />
+                  <span class="param-badge">default: 0.5</span>
+                </div>
+                <div class="param-item">
+                  <span class="param-name">min_speech_ms</span>
+                  <input type="number" value="250" step="50" min="0" id="param-min-speech" disabled />
+                  <span class="param-badge">default: 250</span>
+                </div>
+                <div class="param-item">
+                  <span class="param-name">min_silence_ms</span>
+                  <input type="number" value="400" step="50" min="0" id="param-min-silence" disabled />
+                  <span class="param-badge">default: 400</span>
+                </div>
+                <div class="param-item">
+                  <span class="param-name">speech_pad_ms</span>
+                  <input type="number" value="150" step="50" min="0" id="param-pad" disabled />
+                  <span class="param-badge">default: 150</span>
+                </div>
+                <div class="param-item">
+                  <span class="param-name">max_speech_s</span>
+                  <input type="number" value="20" step="1" min="1" id="param-max-speech" disabled />
+                  <span class="param-badge">default: 20</span>
+                </div>
+                <div class="param-item">
+                  <span class="param-name">sample_rate</span>
+                  <input type="number" value="16000" disabled id="param-sr" />
+                  <span class="param-badge">fixed: 16k</span>
+                </div>
               </div>
-              <div class="param-item">
-                <span class="param-name">min_speech_ms</span>
-                <input type="number" value="250" step="50" min="0" id="param-min-speech" disabled />
-                <span class="param-badge">default: 250</span>
-              </div>
-              <div class="param-item">
-                <span class="param-name">min_silence_ms</span>
-                <input type="number" value="400" step="50" min="0" id="param-min-silence" disabled />
-                <span class="param-badge">default: 400</span>
-              </div>
-              <div class="param-item">
-                <span class="param-name">speech_pad_ms</span>
-                <input type="number" value="150" step="50" min="0" id="param-pad" disabled />
-                <span class="param-badge">default: 150</span>
-              </div>
-              <div class="param-item">
-                <span class="param-name">max_speech_s</span>
-                <input type="number" value="20" step="1" min="1" id="param-max-speech" disabled />
-                <span class="param-badge">default: 20</span>
-              </div>
-              <div class="param-item">
-                <span class="param-name">sample_rate</span>
-                <input type="number" value="16000" disabled id="param-sr" />
-                <span class="param-badge">fixed: 16k</span>
-              </div>
+            </div>
+            <div class="param-env-hint">
+              <span class="hint-icon">💡</span>
+              <p><strong>Environment Note:</strong> VAD exception parameters apply across all modes. For neural ASR transcription (SraVaani / Whisper / PyAnnote), launch SegAUD in <strong>PC App mode</strong> (<code>run_segaud.bat</code>) or <strong>Terminal mode</strong>.</p>
             </div>
           </div>
           <button class="btn btn-primary btn-full" id="generate-btn">⚡ Generate Project</button>
@@ -353,8 +353,6 @@
         </div>
         <div class="banner-tags" id="workspace-proj-tags">
           <span class="tag tag-lang" id="workspace-lang-tag">Awadhi (awa)</span>
-          <span class="tag tag-vad" id="workspace-vad-tag">Silero VAD (0.5)</span>
-          <span class="tag tag-asr" id="workspace-asr-tag">SraVaani ASR</span>
         </div>
       </div>
 
@@ -397,8 +395,7 @@
               </div>
               <div class="form-group audio-domain-group">
                 <div class="label-row">
-                  <label for="audio-domain">Audio Domain <span class="required-star">*</span></label>
-                  <span class="input-hint compulsory-hint">Compulsory for dataset</span>
+                  <label for="audio-domain">AUDIO DOMAIN <span class="required-star">*</span></label>
                 </div>
                 <input type="text" id="audio-domain" class="form-input" placeholder="e.g. Agriculture, Healthcare, Folk Tales, Education" required />
                 <span class="field-error-text" id="domain-error-hint" style="display: none;">⚠️ Domain is compulsory. Please enter a domain before running.</span>
@@ -408,13 +405,15 @@
             <audio id="audio-player" controls preload="metadata" class="audio-player-element"></audio>
             
             <div class="pipeline-options-row">
-              <div class="backend-indicator-row">
-                <span class="backend-status-pill" id="backend-status-badge">⚡ Checking Engine...</span>
+              <div class="model-select-group">
+                <div class="label-row" style="margin-bottom: 4px;">
+                  <label for="select-asr-model" style="font-size: .78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px;">Select Model</label>
+                </div>
+                <select id="select-asr-model" class="form-input model-dropdown">
+                  <!-- Populated dynamically from settings -->
+                </select>
               </div>
-              <div class="hf-token-input-wrap">
-                <input type="password" id="hf-token-input" class="form-input form-input-sm" placeholder="Hugging Face Token (optional, unlocks ARTPARK-IISc/SraVaani-1.0)" style="font-size: .76rem; padding: 6px 10px; width: 100%; box-sizing: border-box;" />
-              </div>
-              <label class="asr-toggle-label" for="enable-neural-asr" style="margin-top: 4px;">
+              <label class="asr-toggle-label" for="enable-neural-asr" style="margin-top: 6px;">
                 <input type="checkbox" id="enable-neural-asr" checked />
                 <span class="toggle-indicator"></span>
                 <span class="toggle-text">Run ASR Speech Transcription (Devanagari)</span>
@@ -423,7 +422,7 @@
             </div>
 
             <button type="button" class="btn btn-primary btn-run-pipeline" id="run-pipeline-btn">
-              <span>▶ Run Silero VAD &amp; SraVaani ASR</span>
+              <span>▶ Run</span>
             </button>
           </div>
 
@@ -486,6 +485,77 @@
               <span class="metric-lbl">Cut Threshold</span>
             </div>
           </div>
+
+          <!-- Model Execution Environments Compatibility Panel (Web vs PC App vs Terminal) -->
+          <div class="model-env-info-panel">
+            <div class="model-env-header">
+              <div class="model-env-title-row">
+                <span class="model-env-badge">Execution Environments</span>
+                <h4>Model Compatibility Guide</h4>
+              </div>
+              <p class="model-env-desc">Some lightweight processing runs directly in the website browser, while deep neural models require PC App mode or Terminal mode after local weights download.</p>
+            </div>
+
+            <div class="model-env-grid">
+              <!-- Web Browser Mode -->
+              <div class="model-env-card env-web">
+                <div class="env-card-head">
+                  <span class="env-icon">🌐</span>
+                  <div>
+                    <strong>Web Browser Mode</strong>
+                    <span class="env-status-pill pill-web">Client Sandbox</span>
+                  </div>
+                </div>
+                <p class="env-text">Runs inside standard web browsers via Web Audio API. Zero install required.</p>
+                <div class="env-models-tag">
+                  <span class="env-tag-lbl">Works in Browser:</span>
+                  <span class="tag-pill">Silero VAD (In-browser)</span>
+                  <span class="tag-pill">Audio Playback</span>
+                  <span class="tag-pill">Table CSV Review</span>
+                </div>
+                <span class="env-note warning">⚠️ Multi-gigabyte neural PyTorch models (Whisper, SraVaani, PyAnnote) cannot execute inside raw client browser tabs.</span>
+              </div>
+
+              <!-- PC Desktop App Mode -->
+              <div class="model-env-card env-app active-env">
+                <div class="env-card-head">
+                  <span class="env-icon">💻</span>
+                  <div>
+                    <strong>PC Desktop App Mode</strong>
+                    <span class="env-status-pill pill-app">Recommended</span>
+                  </div>
+                </div>
+                <p class="env-text">Launched via <code>run_segaud.bat</code> or <code>python app.py</code>. Full local PyTorch engine runs on your PC CPU/GPU.</p>
+                <div class="env-models-tag">
+                  <span class="env-tag-lbl">Full Neural Inference:</span>
+                  <span class="tag-pill highlight">OpenAI Whisper-Base / Small</span>
+                  <span class="tag-pill highlight">ARTPARK SraVaani-1.0</span>
+                  <span class="tag-pill highlight">pyannote Diarization</span>
+                  <span class="tag-pill highlight">Any Hugging Face Model</span>
+                </div>
+                <span class="env-note success">✓ Weights automatically downloaded to local Hugging Face cache on first run; slices saved directly to disk.</span>
+              </div>
+
+              <!-- Terminal / CLI Pipeline Mode -->
+              <div class="model-env-card env-cli">
+                <div class="env-card-head">
+                  <span class="env-icon">⌨️</span>
+                  <div>
+                    <strong>Terminal / CLI Mode</strong>
+                    <span class="env-status-pill pill-cli">Headless / Batch</span>
+                  </div>
+                </div>
+                <p class="env-text">Run batch pipelines directly: <code>python main.py audio.wav --domain Agriculture</code>.</p>
+                <div class="env-models-tag">
+                  <span class="env-tag-lbl">Ideal For:</span>
+                  <span class="tag-pill">Multi-Hour Recordings</span>
+                  <span class="tag-pill">Folder Batch Processing</span>
+                  <span class="tag-pill">Script Automation</span>
+                </div>
+                <span class="env-note">⚡ Maximum multi-threading throughput with zero UI overhead.</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -493,15 +563,15 @@
       <div class="vad-asr-results-card" id="vad-asr-results" style="display: none;">
         <div class="results-header">
           <div>
-            <h3>Speech Segments &amp; SraVaani Transcriptions</h3>
+            <h3>Speech Segments &amp; Transcriptions</h3>
             <p class="results-sub" id="results-summary">3 speech segments identified · Total speech duration: 14.15s</p>
           </div>
           <div class="results-export-actions">
-            <button type="button" class="btn btn-sm btn-ghost" id="export-segments-btn">⤓ segments.csv</button>
-            <button type="button" class="btn btn-sm btn-ghost" id="export-transcripts-btn">⤓ transcriptions.csv</button>
-            <button type="button" class="btn btn-sm btn-ghost" id="export-unverified-btn" title="Export separate CSV file containing only unverified segments">⤓ unverified.csv</button>
-            <button type="button" class="btn btn-sm btn-ghost" id="export-audio-zip-btn">🎵⤓ Export Audio (.zip)</button>
-            <button type="button" class="btn btn-sm btn-primary" id="export-all-btn">⤓ Download All Results</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="verify-all-btn">✓ Verify All</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-segments-btn">segments.csv</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-transcripts-btn">transcriptions.csv</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="export-unverified-btn" title="Export separate CSV file containing only unverified segments">unverified.csv</button>
+            <button type="button" class="btn btn-sm btn-primary" id="export-all-btn">Download All Results</button>
           </div>
         </div>
 
@@ -525,6 +595,7 @@
                 <th class="col-seg-id">Segment ID</th>
                 <th class="col-time">Time &amp; Duration</th>
                 <th class="col-conf">VAD Conf</th>
+                <th class="col-speaker">Speaker</th>
                 <th class="col-domain">Domain</th>
                 <th class="col-transcript">Transcript (Devanagari)</th>
                 <th class="col-actions">Audio Clip</th>
@@ -547,21 +618,26 @@
       <h2 class="section-title">Documentation &amp; Reference</h2>
       <p class="section-sub">Detailed component specifications, architecture comparison matrix, and developer resources for SegAUD.</p>
 
-      <!-- Component Feature Comparison (Moved to Documentation) -->
-      <div class="docs-comparison-block">
-        <div class="docs-comparison-header">
-          <span class="docs-subbadge">Architecture Matrix</span>
-          <h3 class="docs-comparison-title">Component Feature Comparison</h3>
-          <p class="docs-comparison-sub">How SegAUD's pipeline modules compare across speed, compute requirements, and low-resource language support.</p>
+      <!-- Component Feature Comparison (Collapsible) -->
+      <div class="docs-comparison-block" id="docs-comparison-block">
+        <div class="docs-comparison-header" id="docs-comparison-toggle-header">
+          <div>
+            <span class="docs-subbadge">Architecture Matrix</span>
+            <h3 class="docs-comparison-title">Component Feature Comparison</h3>
+            <p class="docs-comparison-sub">How SegAUD's pipeline modules compare across speed, compute requirements, and low-resource language support.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost btn-collapse-toggle" id="toggle-comparison-btn" title="Toggle Feature Comparison" aria-label="Toggle Feature Comparison">
+            <span id="collapse-toggle-icon">▼</span>
+          </button>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" id="comparison-table-wrap">
           <table class="comparison-table" id="feature-table">
             <thead>
               <tr>
                 <th>Feature</th>
                 <th>Silero VAD</th>
-                <th>SraVaani ASR</th>
-                <th>WhisperX <span class="roadmap-tag">Planned</span></th>
+                <th>Devanagari ASR</th>
+                <th>pyannote Diarization</th>
               </tr>
             </thead>
             <tbody>
@@ -569,61 +645,61 @@
                 <td>Primary Function</td>
                 <td>Voice Activity Detection</td>
                 <td>Speech-to-Text</td>
-                <td>ASR + Forced Alignment</td>
+                <td>Speaker Turn Detection &amp; Splitting</td>
               </tr>
               <tr>
                 <td>Low-Resource Language Support</td>
                 <td>Language-agnostic ✓</td>
-                <td>20+ low-resource languages ✓</td>
-                <td>Multilingual (99 langs)</td>
+                <td>Awadhi / Hindi / 20+ Indic ✓</td>
+                <td>Language-agnostic ✓</td>
               </tr>
               <tr>
                 <td>CPU Inference</td>
                 <td class="cell-yes">✓ Optimized</td>
                 <td class="cell-yes">✓ Supported</td>
-                <td class="cell-partial">△ Possible (slower)</td>
+                <td class="cell-yes">✓ Supported</td>
               </tr>
               <tr>
                 <td>GPU Acceleration</td>
                 <td class="cell-partial">△ Not needed</td>
                 <td class="cell-yes">✓ CUDA auto-detect</td>
-                <td class="cell-yes">✓ CUDA required for speed</td>
+                <td class="cell-yes">✓ CUDA auto-detect</td>
               </tr>
               <tr>
-                <td>Word-level Timestamps</td>
+                <td>Multi-Speaker Handling</td>
+                <td class="cell-no">✗ (Merged)</td>
                 <td class="cell-no">✗</td>
-                <td class="cell-no">✗</td>
-                <td class="cell-yes">✓ Via forced alignment</td>
+                <td class="cell-yes">✓ Splits into Speaker 1 / Speaker 2</td>
               </tr>
               <tr>
                 <td>Segment-level Timestamps</td>
                 <td class="cell-yes">✓ start / end (seconds)</td>
                 <td class="cell-no">✗</td>
-                <td class="cell-yes">✓</td>
+                <td class="cell-yes">✓ Turn boundaries</td>
               </tr>
               <tr>
                 <td>Max Segment Duration</td>
                 <td>Configurable (default 20 s)</td>
                 <td>Per-segment input</td>
-                <td>Configurable chunk size</td>
+                <td>Full-audio stream</td>
               </tr>
               <tr>
                 <td>Model Size</td>
                 <td>~2 MB</td>
-                <td>~1 GB (gated HF repo)</td>
-                <td>~1.5 GB (large-v3)</td>
+                <td>~74 MB – 1 GB</td>
+                <td>~30 MB (neural pipeline)</td>
               </tr>
               <tr>
-                <td>Cross-Verification</td>
+                <td>Multi-Turn Verification</td>
                 <td>—</td>
                 <td>—</td>
-                <td class="cell-yes">✓ Planned with SraVaani</td>
+                <td class="cell-yes">✓ Overlap speaker detection</td>
               </tr>
               <tr>
                 <td>Output Format</td>
                 <td>CSV (segments)</td>
                 <td>CSV (transcriptions)</td>
-                <td>JSON / SRT / VTT</td>
+                <td>CSV (speaker column)</td>
               </tr>
             </tbody>
           </table>
@@ -644,11 +720,11 @@
           <p>ARTPARK-IISc's multilingual ASR — model card, supported languages, and Hugging Face access.</p>
           <span class="doc-link">vaani.iisc.ac.in ↗</span>
         </a>
-        <a href="https://github.com/m-bain/whisperX" target="_blank" rel="noopener" class="doc-card" id="doc-whisperx">
-          <div class="doc-icon">🔮</div>
-          <h3>WhisperX <span class="roadmap-tag">Future</span></h3>
-          <p>Word-level timestamps via forced alignment — planned for cross-verification with SraVaani output.</p>
-          <span class="doc-link">m-bain/whisperX ↗</span>
+        <a href="https://github.com/pyannote/pyannote-audio" target="_blank" rel="noopener" class="doc-card" id="doc-pyannote">
+          <div class="doc-icon">👥</div>
+          <h3>pyannote.audio</h3>
+          <p>Neural speaker diarization — turn detection, speaker clustering, and multi-speaker segment splitting.</p>
+          <span class="doc-link">pyannote/pyannote-audio ↗</span>
         </a>
         <a href="https://pytorch.org/docs/stable/index.html" target="_blank" rel="noopener" class="doc-card" id="doc-pytorch">
           <div class="doc-icon">🔥</div>
@@ -668,7 +744,7 @@
         <span class="footer-sub">Audio Segmentation &amp; Transcription Toolkit</span>
       </div>
       <div class="footer-meta">
-        <span>Python 3.11 · PyTorch · Silero VAD · SraVaani</span>
+        <span>Python 3.13 · PyTorch · Silero VAD · pyannote.audio · Devanagari ASR</span>
         <span>CPU-first · Open Source</span>
       </div>
     </div>
@@ -677,6 +753,105 @@
   <!-- App Mode Status Toast -->
   <div class="app-toast" id="app-toast"></div>
 
-  <script src="app.js"></script>
+  <!-- ───────────────────── ⚙️ SETTINGS MODAL ───────────────────── -->
+  <div class="settings-modal-backdrop" id="settings-modal" style="display: none;">
+    <div class="settings-modal-dialog">
+      <div class="settings-modal-header">
+        <div class="settings-modal-title-group">
+          <span class="settings-icon-badge">⚙️</span>
+          <h3>Settings &amp; Model Credentials</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="close-settings-btn" title="Close" aria-label="Close">✕</button>
+      </div>
+      <div class="settings-modal-body">
+        <!-- Section: Model Credentials & Token Manager -->
+        <div class="settings-section">
+          <div class="section-heading-flex">
+            <div>
+              <h4>Hugging Face Models &amp; Credentials</h4>
+              <p class="settings-hint">Add any Hugging Face model repository to transcribe audio with zero code editing. Models and credentials are saved locally.</p>
+            </div>
+            <span class="chip-badge">Code-Free Models</span>
+          </div>
+
+          <!-- Permanent Non-removable Hugging Face Master Token -->
+          <div class="model-credential-card default-card">
+            <div class="model-card-header">
+              <div class="model-info">
+                <strong class="model-name">Hugging Face Master Token</strong>
+                <span class="tag-default-badge">Permanent / Default</span>
+              </div>
+              <span class="model-applies-to">Used for SraVaani, PyAnnote &amp; Gated HF Models</span>
+            </div>
+            <div class="token-input-row">
+              <div class="password-input-wrap">
+                <input type="password" id="hf-permanent-token" class="form-input form-input-sm" placeholder="Enter Hugging Face Token (hf_...)" />
+                <button type="button" class="btn-eye-toggle" id="toggle-hf-pwd-eye" title="Show/Hide Token" aria-label="Toggle password visibility">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </div>
+              <button type="button" class="btn btn-sm btn-primary" id="save-hf-token-btn">Save Token</button>
+            </div>
+            <span class="token-status-text" id="hf-token-status">Token unconfigured</span>
+          </div>
+
+          <!-- Quick Hugging Face Preset Recommendations -->
+          <div class="hf-presets-block">
+            <span class="hf-presets-label">Popular Hugging Face ASR Models (1-Click Add):</span>
+            <div class="hf-presets-grid">
+              <button type="button" class="hf-preset-chip" data-name="OpenAI Whisper Large v3" data-repo="openai/whisper-large-v3" title="Add Whisper Large v3">
+                + Whisper Large v3
+              </button>
+              <button type="button" class="hf-preset-chip" data-name="IndicWav2Vec Hindi" data-repo="ai4bharat/indicwav2vec-hindi" title="Add AI4Bharat IndicWav2Vec">
+                + AI4Bharat IndicWav2Vec
+              </button>
+              <button type="button" class="hf-preset-chip" data-name="Meta MMS 1B" data-repo="facebook/mms-1b-all" title="Add Meta MMS 1B">
+                + Meta MMS 1B
+              </button>
+              <button type="button" class="hf-preset-chip" data-name="Vasista22 Hindi Whisper" data-repo="vasista22/whisper-hindi-large-v2" title="Add Vasista22 Hindi Whisper">
+                + Vasista22 Hindi Whisper
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Models List & Addition -->
+          <div class="custom-models-section">
+            <h5 class="custom-models-title">Configured Models (Hugging Face / Custom)</h5>
+            <div class="custom-models-list" id="custom-models-list">
+              <!-- Dynamically populated from local storage -->
+            </div>
+
+            <div class="add-model-box">
+              <h6 class="add-model-heading">Add Any Hugging Face Model (Code-Free)</h6>
+              <div class="add-model-grid">
+                <input type="text" id="new-model-name" class="form-input form-input-sm" placeholder="Display Name (e.g. Whisper Large v3)" />
+                <input type="text" id="new-model-repo" class="form-input form-input-sm" placeholder="Hugging Face Repo ID (e.g. openai/whisper-large-v3)" />
+                <div class="password-input-wrap">
+                  <input type="password" id="new-model-token" class="form-input form-input-sm" placeholder="Token / API (optional, defaults to HF Token)" />
+                  <button type="button" class="btn-eye-toggle" id="toggle-new-model-pwd-eye" title="Show/Hide Token" aria-label="Toggle password visibility">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" id="add-model-btn">+ Add Model</button>
+              </div>
+              <span class="field-error-text" id="add-model-error" style="display: none;">Please provide both a Display Name and Hugging Face Repo ID.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Workspace Reset -->
+        <div class="settings-section danger-zone">
+          <h4>Workspace Data</h4>
+          <p class="settings-hint">Clear current audio file, extracted segments, table data, and reset workspace state.</p>
+          <button type="button" class="btn btn-sm btn-danger" id="clear-workspace-btn">🗑️ Clear Workspace Data</button>
+        </div>
+      </div>
+      <div class="settings-modal-footer">
+        <button type="button" class="btn btn-sm btn-ghost" id="done-settings-btn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=19"></script>
 </body>
 </html>
