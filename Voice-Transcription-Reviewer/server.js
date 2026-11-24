@@ -692,8 +692,11 @@ app.get('/', requireAuth, (req, res) => {
     });
   }
 
-  // Any authenticated user can access upload to work on their own SegAUD dataset
+  // Dataset upload tab — restricted to administrators
   if (tab === 'upload') {
+    if (user.role !== 'admin') {
+      return res.redirect('/?error=' + encodeURIComponent('Access restricted: Only administrators can upload or configure datasets.'));
+    }
     return res.render('index', {
       mode: 'upload',
       user,
@@ -785,8 +788,8 @@ app.get('/', requireAuth, (req, res) => {
   });
 });
 
-// POST /upload — Upload CSV (SegAUD format) + audio/ZIP upload (accessible to authenticated users)
-app.post('/upload', requireAuth, upload.fields([
+// POST /upload — Upload CSV (SegAUD format) + audio/ZIP upload (Admin only)
+app.post('/upload', requireAuth, requireAdmin, upload.fields([
   { name: 'csvFile', maxCount: 1 },
   { name: 'audioFiles' },
 ]), async (req, res) => {
@@ -940,6 +943,9 @@ app.post('/trim-audio', requireAuth, (req, res) => {
 
 // POST /revert-audio — Revert trimmed audio file back to original untrimmed version
 app.post('/revert-audio', requireAuth, (req, res) => {
+  if (req.session.user.role !== 'admin' && !req.session.user.canTrim) {
+    return res.status(403).json({ error: 'Permission denied: Audio trimming and revert are restricted to administrators.' });
+  }
   const idx = parseInt(req.body.idx, 10);
   if (isNaN(idx) || idx < 0 || idx >= records.length) {
     return res.status(400).json({ error: 'Invalid record index' });
@@ -986,9 +992,19 @@ app.post('/revert-audio', requireAuth, (req, res) => {
 
 // POST /revert-record — Revert an individual record's transcription and audio to baseline
 app.post('/revert-record', requireAuth, (req, res) => {
+  const user = req.session.user;
   const idx = parseInt(req.body.idx, 10);
   if (isNaN(idx) || idx < 0 || idx >= records.length) {
     return res.status(400).json({ error: 'Invalid record index' });
+  }
+
+  // Non-admins can only revert records assigned to them
+  if (user.role !== 'admin' && user.quota > 0) {
+    const minIdx = Math.max(0, user.startIndex || 0);
+    const maxIdx = Math.min(records.length - 1, minIdx + user.quota - 1);
+    if (idx < minIdx || idx > maxIdx) {
+      return res.status(403).json({ error: `Permission denied: Record ${idx + 1} is outside your assigned quota.` });
+    }
   }
 
   const origRecords = loadOriginalRecords();
@@ -1036,8 +1052,8 @@ app.post('/revert-record', requireAuth, (req, res) => {
   });
 });
 
-// POST /revert-all — Revert entire dataset & audio files to original baseline
-app.post('/revert-all', requireAuth, (req, res) => {
+// POST /revert-all — Revert entire dataset & audio files to original baseline (Admin only)
+app.post('/revert-all', requireAuth, requireAdmin, (req, res) => {
   const origRecords = loadOriginalRecords();
   if (!origRecords || origRecords.length === 0) {
     return res.status(404).json({ error: 'No original baseline dataset found.' });

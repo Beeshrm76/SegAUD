@@ -2414,6 +2414,7 @@ function initAudioWorkspace() {
   }
 
   // ── Open in Voice Transcription Reviewer Button ──
+  const SHRUTI_LEKHAN_URL = 'https://shrutilekhan.vercel.app';
   const openVtrResultsBtn = document.getElementById('open-vtr-results-btn');
   if (openVtrResultsBtn) {
     openVtrResultsBtn.addEventListener('click', async () => {
@@ -2423,33 +2424,27 @@ function initAudioWorkspace() {
       }
       const audioName = customNameInput?.value.trim() || currentAudioFile?.name?.replace(/\.[^/.]+$/, '') || 'audio';
       const origText = openVtrResultsBtn.innerHTML;
-      openVtrResultsBtn.innerHTML = '<span>⏳ Syncing to Reviewer...</span>';
+      openVtrResultsBtn.innerHTML = '<span>⏳ Opening Reviewer...</span>';
       openVtrResultsBtn.disabled = true;
 
       try {
         if (isPythonBackend) {
-          const resp = await fetch(`${backendBaseUrl}/api/sync_to_vtr`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              audio_name: audioName,
-              segments: activeSegments
-            })
-          });
-          const data = await resp.json();
-          if (data.success) {
-            showAppToast(`✓ Synced ${data.count} segments to Voice Transcription Reviewer!`);
-            window.open(data.url || 'http://localhost:3000/?idx=0', '_blank');
-          } else {
-            alert('⚠️ Sync error: ' + (data.error || 'Failed to sync segments'));
-          }
-        } else {
-          showAppToast('Opening Voice Transcription Reviewer at http://localhost:3000 ...');
-          window.open('http://localhost:3000/?idx=0', '_blank');
+          try {
+            await fetch(`${backendBaseUrl}/api/sync_to_vtr`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                audio_name: audioName,
+                segments: activeSegments
+              })
+            });
+          } catch (e) {}
         }
+        showAppToast('Opening Shruti-Lekhan Reviewer...');
+        window.open(`${SHRUTI_LEKHAN_URL}/?idx=0`, '_blank');
       } catch (err) {
-        console.warn('VTR sync exception:', err);
-        window.open('http://localhost:3000/?idx=0', '_blank');
+        console.warn('VTR open exception:', err);
+        window.open(`${SHRUTI_LEKHAN_URL}/?idx=0`, '_blank');
       } finally {
         openVtrResultsBtn.innerHTML = origText;
         openVtrResultsBtn.disabled = false;
@@ -2460,6 +2455,7 @@ function initAudioWorkspace() {
 
 /* ── Transcription Review Integration ── */
 function initTranscriptionReview() {
+  const SHRUTI_LEKHAN_URL = 'https://shrutilekhan.vercel.app';
   const openAppBtn = document.getElementById('btn-open-vtr-app');
   const openAdminBtn = document.getElementById('btn-open-vtr-admin');
 
@@ -2468,10 +2464,9 @@ function initTranscriptionReview() {
       if (window.__isPythonBackend) {
         try {
           await fetch(`${window.__backendBaseUrl || ''}/api/launch_vtr`);
-          return;
         } catch (e) {}
       }
-      window.open('http://localhost:3000/', '_blank');
+      window.open(`${SHRUTI_LEKHAN_URL}/`, '_blank');
     });
   }
 
@@ -2480,10 +2475,9 @@ function initTranscriptionReview() {
       if (window.__isPythonBackend) {
         try {
           await fetch(`${window.__backendBaseUrl || ''}/api/launch_vtr_admin`);
-          return;
         } catch (e) {}
       }
-      window.open('http://localhost:3000/?tab=upload', '_blank');
+      window.open(`${SHRUTI_LEKHAN_URL}/?tab=upload`, '_blank');
     });
   }
 }
