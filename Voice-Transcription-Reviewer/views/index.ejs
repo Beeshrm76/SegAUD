@@ -136,14 +136,24 @@
     .header-brand-text {
       display: flex;
       flex-direction: column;
+      line-height: 1.15;
+      justify-content: center;
     }
 
-    .header-brand h1 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+    .brand-top {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: -0.2px;
       color: var(--text-primary);
-      margin: 0;
+    }
+
+    .brand-bottom {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--primary);
     }
 
     .header-nav {
@@ -169,6 +179,30 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .user-badge-symmetric {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-side-icon {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.82rem;
+      line-height: 1;
+    }
+
+    .badge-user-label {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      text-transform: capitalize;
     }
 
     .badge-accent {
@@ -1022,23 +1056,25 @@
 <body>
 
   <header>
-    <a href="/" class="header-brand" title="Shruti-Lekhan Workbench">
+    <a href="/" class="header-brand" title="Shruti Lekhan Workbench">
       <div class="header-logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2v20M17 5v14M7 8v8M22 10v4M2 10v4"/>
         </svg>
       </div>
       <div class="header-brand-text">
-        <h1>Shruti-Lekhan</h1>
+        <span class="brand-top">Shruti</span>
+        <span class="brand-bottom">Lekhan</span>
       </div>
     </a>
 
     <div class="header-nav">
       <% if (user) { %>
         <div class="header-meta">
-          <span class="badge badge-accent">👤 <%= user.username %></span>
-          <span class="badge <%= user.role === 'admin' ? 'badge-admin' : 'badge-verifier' %>">
-            <%= user.role==='admin' ? '⚡ ADMIN' : '✓ VERIFIER' %>
+          <span class="badge <%= user.role === 'admin' ? 'badge-admin' : 'badge-verifier' %> user-badge-symmetric">
+            <span class="badge-side-icon">👤</span>
+            <span class="badge-user-label"><%= user.username %><% if (user.username.toLowerCase() !== user.role.toLowerCase()) { %> · <%= user.role.toUpperCase() %><% } %></span>
+            <span class="badge-side-icon"><%= user.role === 'admin' ? '⚡' : '✓' %></span>
           </span>
           <% if (user.role !=='admin' ) { %>
             <span class="badge badge-quota">
@@ -1077,7 +1113,10 @@
                 <path d="M12 2v20M17 5v14M7 8v8M22 10v4M2 10v4"/>
               </svg>
             </div>
-            <h2>Shruti-Lekhan</h2>
+            <div style="display:flex;flex-direction:column;align-items:center;line-height:1.15;margin-top:6px;">
+              <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:1.55rem;font-weight:800;color:var(--text-primary);letter-spacing:-0.3px;">Shruti</span>
+              <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:1.25rem;font-weight:700;color:var(--primary);letter-spacing:0.5px;">Lekhan</span>
+            </div>
           </div>
 
           <% if (error) { %>
@@ -2272,7 +2311,7 @@
   </main>
 
   <footer class="footer-strip">
-    <span>Shruti-Lekhan — Shruti (Listening) + Lekhan (Writing) | Speech Workbench</span>
+    <span>Shruti Lekhan | Speech Transcription Workbench</span>
     <% if (user) { %>
       <span>Logged in as <strong>
           <%= user.username %>
