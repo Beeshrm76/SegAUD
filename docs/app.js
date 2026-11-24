@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   safeInit(initAppModeLauncher, 'initAppModeLauncher');
   safeInit(initScrollAnimations, 'initScrollAnimations');
   safeInit(initSmoothNav, 'initSmoothNav');
+  safeInit(initTranscriptionReview, 'initTranscriptionReview');
 });
 
 /* ── Waveform Canvas ── */
@@ -1081,6 +1082,7 @@ function initAudioWorkspace() {
   let currentAudioBuffer = null;
   let currentDuration = 0;
   let activeSegments = [];
+  let speakerList = ['Speaker 1', 'Speaker 2'];
 
   // Expose resetWorkspace for Settings modal
   window.__resetWorkspace = function() {
@@ -2124,6 +2126,12 @@ function initAudioWorkspace() {
       }
     }
 
+    // Auto-populate speaker list from detected segments
+    const detectedSpeakers = [...new Set(activeSegments.map(s => s.speaker || 'Speaker 1'))];
+    detectedSpeakers.forEach(spk => {
+      if (!speakerList.includes(spk)) speakerList.push(spk);
+    });
+
     // Render Table Rows with Domain, Speaker, ASR Transcript, Play/Pause Toggle, and Delete
     if (tableBody) {
       if (activeSegments.length === 0) {
@@ -2150,7 +2158,12 @@ function initAudioWorkspace() {
                 </div>
               </td>
               <td><span class="tag tag-vad">${(seg.conf * 100).toFixed(0)}%</span></td>
-              <td><span class="speaker-tag ${spkCls}">${escapeHtml(spk)}</span></td>
+              <td>
+                <select class="speaker-select" data-idx="${idx}">
+                  ${speakerList.map(s => `<option value="${escapeHtml(s)}" ${s === spk ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+                  <option value="__add_new__">+ Add Speaker</option>
+                </select>
+              </td>
               <td><span class="domain-pill">${escapeHtml(seg.domain)}</span></td>
               <td>
                 <textarea class="transcript-input" data-idx="${idx}" rows="1" placeholder="Enter transcript for ${escapeHtml(seg.id)}...">${escapeHtml(seg.text || '')}</textarea>
@@ -2203,6 +2216,34 @@ function initAudioWorkspace() {
           const idx = parseInt(e.target.getAttribute('data-idx'), 10);
           if (activeSegments[idx]) {
             activeSegments[idx].verified = e.target.checked;
+          }
+        });
+      });
+
+      // Speaker dropdown change handler
+      tableBody.querySelectorAll('.speaker-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+          const val = e.target.value;
+          if (val === '__add_new__') {
+            const newName = prompt('Enter new speaker name (e.g. Speaker 3, Interviewer):');
+            if (newName && newName.trim()) {
+              const trimmed = newName.trim();
+              if (!speakerList.includes(trimmed)) {
+                speakerList.push(trimmed);
+              }
+              if (activeSegments[idx]) {
+                activeSegments[idx].speaker = trimmed;
+              }
+              renderSegmentationResults(false);
+            } else {
+              // Revert to current value
+              e.target.value = activeSegments[idx]?.speaker || 'Speaker 1';
+            }
+          } else {
+            if (activeSegments[idx]) {
+              activeSegments[idx].speaker = val;
+            }
           }
         });
       });
@@ -2371,6 +2412,80 @@ function initAudioWorkspace() {
       }, 900);
     });
   }
+
+  // ── Open in Voice Transcription Reviewer Button ──
+  const openVtrResultsBtn = document.getElementById('open-vtr-results-btn');
+  if (openVtrResultsBtn) {
+    openVtrResultsBtn.addEventListener('click', async () => {
+      if (activeSegments.length === 0) {
+        alert('Please run the segmentation pipeline first to generate audio slices.');
+        return;
+      }
+      const audioName = customNameInput?.value.trim() || currentAudioFile?.name?.replace(/\.[^/.]+$/, '') || 'audio';
+      const origText = openVtrResultsBtn.innerHTML;
+      openVtrResultsBtn.innerHTML = '<span>⏳ Syncing to Reviewer...</span>';
+      openVtrResultsBtn.disabled = true;
+
+      try {
+        if (isPythonBackend) {
+          const resp = await fetch(`${backendBaseUrl}/api/sync_to_vtr`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audio_name: audioName,
+              segments: activeSegments
+            })
+          });
+          const data = await resp.json();
+          if (data.success) {
+            showAppToast(`✓ Synced ${data.count} segments to Voice Transcription Reviewer!`);
+            window.open(data.url || 'http://localhost:3000/?idx=0', '_blank');
+          } else {
+            alert('⚠️ Sync error: ' + (data.error || 'Failed to sync segments'));
+          }
+        } else {
+          showAppToast('Opening Voice Transcription Reviewer at http://localhost:3000 ...');
+          window.open('http://localhost:3000/?idx=0', '_blank');
+        }
+      } catch (err) {
+        console.warn('VTR sync exception:', err);
+        window.open('http://localhost:3000/?idx=0', '_blank');
+      } finally {
+        openVtrResultsBtn.innerHTML = origText;
+        openVtrResultsBtn.disabled = false;
+      }
+    });
+  }
+}
+
+/* ── Transcription Review Integration ── */
+function initTranscriptionReview() {
+  const openAppBtn = document.getElementById('btn-open-vtr-app');
+  const openAdminBtn = document.getElementById('btn-open-vtr-admin');
+
+  if (openAppBtn) {
+    openAppBtn.addEventListener('click', async () => {
+      if (window.__isPythonBackend) {
+        try {
+          await fetch(`${window.__backendBaseUrl || ''}/api/launch_vtr`);
+          return;
+        } catch (e) {}
+      }
+      window.open('http://localhost:3000/', '_blank');
+    });
+  }
+
+  if (openAdminBtn) {
+    openAdminBtn.addEventListener('click', async () => {
+      if (window.__isPythonBackend) {
+        try {
+          await fetch(`${window.__backendBaseUrl || ''}/api/launch_vtr_admin`);
+          return;
+        } catch (e) {}
+      }
+      window.open('http://localhost:3000/?tab=upload', '_blank');
+    });
+  }
 }
 
 /* ── Scroll Animations ── */
@@ -2436,7 +2551,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-/* ── App Mode Launcher ("Open in app") ── */
+/* ── App Mode Launcher & Installer ("Install App") ── */
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -2472,49 +2587,134 @@ function updateButtonsForAppMode() {
 
   if (isApp) {
     if (navBtn) {
-      navBtn.innerHTML = '<span class="app-icon">✓</span> In App Mode';
+      navBtn.innerHTML = '<span class="app-icon">✓</span> App Installed';
       navBtn.classList.add('btn-in-app');
+      navBtn.title = 'SegAUD is running in dedicated standalone App Mode';
     }
   }
 }
 
 function initAppModeLauncher() {
   const navBtn = document.getElementById('open-app-nav-btn');
+  const installModal = document.getElementById('install-modal');
+  const closeInstallBtn = document.getElementById('close-install-modal-btn');
+  const doneInstallBtn = document.getElementById('done-install-modal-btn');
+  const runInstallerBtn = document.getElementById('btn-run-installer-pc');
+  const launchExeBtn = document.getElementById('btn-launch-exe-direct');
+  const installPwaBtn = document.getElementById('btn-install-pwa');
 
   updateButtonsForAppMode();
 
-  function handleOpenApp() {
-    if (isRunningInAppMode()) {
-      showAppToast('You are already running SegAUD in standalone app mode.');
-      return;
-    }
-
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          showAppToast('✓ SegAUD installed as app!');
-        }
-        deferredPrompt = null;
-      });
-      return;
-    }
-
-    // Launch in borderless standalone app window
-    const appWindow = window.open(
-      window.location.href,
-      'SegAUD_App_Window',
-      'popup=1,width=1280,height=850,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes'
-    );
-
-    if (appWindow) {
-      showAppToast('✓ Opened SegAUD in dedicated desktop app window.');
-    } else {
-      showAppToast('Please click "Open in app" (↔) in your browser address bar.');
+  function openInstallModal() {
+    if (installModal) {
+      installModal.style.display = 'flex';
     }
   }
 
-  if (navBtn) navBtn.addEventListener('click', handleOpenApp);
-  if (heroBtn) heroBtn.addEventListener('click', handleOpenApp);
+  function closeInstallModal() {
+    if (installModal) {
+      installModal.style.display = 'none';
+    }
+  }
+
+  if (navBtn) {
+    navBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openInstallModal();
+    });
+  }
+
+  if (closeInstallBtn) closeInstallBtn.addEventListener('click', closeInstallModal);
+  if (doneInstallBtn) doneInstallBtn.addEventListener('click', closeInstallModal);
+
+  if (installModal) {
+    installModal.addEventListener('click', (e) => {
+      if (e.target === installModal) closeInstallModal();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && installModal && installModal.style.display === 'flex') {
+      closeInstallModal();
+    }
+  });
+
+  // Action 1: Run Installer on PC (install.bat)
+  if (runInstallerBtn) {
+    runInstallerBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/run_install_locally');
+        if (res.ok) {
+          showAppToast('⚡ Installer terminal (install.bat) launched on your PC!');
+          closeInstallModal();
+        } else {
+          // Fallback: Trigger download
+          window.location.href = '/api/download/installer_bat';
+          showAppToast('📥 Downloading install.bat for setup...');
+        }
+      } catch (err) {
+        window.location.href = '/api/download/installer_bat';
+        showAppToast('📥 Downloading install.bat for setup...');
+      }
+    });
+  }
+
+  // Action 2: Launch SegAUD Native App Window
+  if (launchExeBtn) {
+    launchExeBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/launch_app_window');
+        if (res.ok) {
+          showAppToast('🚀 SegAUD desktop app window launched!');
+          closeInstallModal();
+          return;
+        }
+      } catch (err) {
+        // Fallback to browser window
+      }
+
+      const appWindow = window.open(
+        window.location.href,
+        'SegAUD_App_Window',
+        'popup=1,width=1366,height=850,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes'
+      );
+      if (appWindow) {
+        showAppToast('✓ Opened SegAUD in dedicated desktop window.');
+        closeInstallModal();
+      } else {
+        showAppToast('Please allow popup or run SegAUD.exe from the project folder.');
+      }
+    });
+  }
+
+  // Action 3: PWA Installation
+  if (installPwaBtn) {
+    installPwaBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showAppToast('✓ SegAUD installed as app!');
+            closeInstallModal();
+          }
+          deferredPrompt = null;
+        });
+        return;
+      }
+
+      // Borderless app window fallback
+      const appWindow = window.open(
+        window.location.href,
+        'SegAUD_App_Window',
+        'popup=1,width=1366,height=850,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes'
+      );
+      if (appWindow) {
+        showAppToast('✓ SegAUD launched in dedicated desktop app window.');
+        closeInstallModal();
+      } else {
+        showAppToast('Please check your browser address bar to install app.');
+      }
+    });
+  }
 }
 

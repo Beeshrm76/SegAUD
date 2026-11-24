@@ -50,7 +50,7 @@ Phase 1: VAD (Segmentation) ──▶ Phase 2: ASR (Transcription) ──▶ Pha
 ### Hardware Profile:
 - **Processor**: Intel Core CPU @ 2.36 GHz
 - **GPU**: Intel(R) Iris(R) Xe Graphics (Integrated iGPU, Shared RAM)
-- **Memory**: 15.7 GB Total (6.0 GB available)
+- **Memory**: 15.7 GB Total
 
 ### Why CPU Optimization Was Necessary:
 - Deep learning frameworks (PyTorch, PyAnnote, Whisper) require NVIDIA CUDA for GPU acceleration. Intel Iris Xe is an integrated GPU without native CUDA support.
@@ -148,3 +148,28 @@ Tested on `uploads/1_dailyconv.m4a` (7 minutes 0 seconds, 16kHz conversational A
 | **Phase 2: ASR** | Whisper-Base / SraVaani | ~1.1s per clip | Full Devanagari Hindi/Awadhi transcription |
 | **Phase 3: Diarization** | WeSpeaker ResNet34 Whole-Segment | **78.8 seconds total** | Silhouette **0.344** (2 distinct speakers identified) |
 | **Overall Resource Use** | CPU + 400 MB RAM | **No PC lag** | Intel Iris Xe free for smooth UI rendering |
+
+---
+
+## 5. Voice-Transcription-Reviewer Integration & Editable Speaker Enhancement
+
+### Feature 1: Editable Speaker Labels & Multi-Speaker Auto-Detection
+- **Dynamic Speaker List**: Initialized with default `Speaker 1` and `Speaker 2`. Automatically detects and populates the speaker roster with all unique speakers identified during Phase 3 diarization (`Speaker 3`, `Speaker 4`, etc.).
+- **Inline Editing**: Segment table presents an editable dropdown per row, allowing instantaneous correction of speaker attributions.
+- **Custom Add Speaker**: Selecting `+ Add Speaker` prompts the user for custom speaker nomenclature, adds it to the project-wide roster, and binds it to the current audio clip.
+- **Export Integrity**: CSV exports (`segments.csv`, `transcriptions.csv`) preserve custom speaker assignments as clean plain-text strings.
+
+### Feature 2: Voice-Transcription-Reviewer (Shruti-Lekhan) Workbench
+- **Integrated Access**: SegAUD UI features direct links to open the review platform (`http://localhost:3000/`) and admin dashboard (`http://localhost:3000/?tab=upload`).
+- **1-Click Sync**: "🔍 Open in Reviewer" action sends active segment slices, Devanagari transcripts, and speaker annotations straight into the review workbench with synchronized audio playback.
+- **Auto-Server Management**: `app.py` automatically detects and boots the local Node.js review server on port 3000 without requiring external cloud services.
+
+### Feature 3: Audio Trimming with Revert-to-Original Recovery
+- **Non-Destructive Trimming**: Baseline original audio files are permanently archived into `Voice-Transcription-Reviewer/originals/` prior to any slice operations.
+- **Instant Recovery**: Introduced `POST /revert-audio` and a dedicated UI button (`↩ Revert to Original Audio`) to undo mistaken trims with zero audio fidelity loss.
+- **Full Dataset Rollback**: `POST /revert-all` allows complete rollback of the entire working dataset and all audio files to their original baseline state.
+
+### Feature 4: SegAUD Format Strict Validation & Independent Edit Logging
+- **Strict Format Parser**: `parseCSV` validates that manual CSV uploads conform strictly to SegAUD structure (`segment_id/voice`, `transcript`, `speaker`, `domain`).
+- **Audit Logging**: Every save or verification action is independently logged in `edits/edits_log.json` and saved as an isolated snapshot in `edits/rec_<idx>_<timestamp>.json`, ensuring original data is never corrupted.
+- **Dual Working Modes**: Supports both admin-directed verification workflows and standalone direct-upload usage.

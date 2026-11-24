@@ -42,6 +42,38 @@ PORT = 8080
 DOCS_DIR = ROOT_DIR / "docs"
 SEGMENTS_DIR = ROOT_DIR / "segments"
 SEGMENTS_DIR.mkdir(parents=True, exist_ok=True)
+VTR_DIR = ROOT_DIR / "Voice-Transcription-Reviewer"
+VTR_PORT = 3000
+
+
+def start_vtr_server():
+    """Start the Node.js Voice-Transcription-Reviewer server in background if not already running."""
+    if is_port_in_use(VTR_PORT):
+        return True, f"http://127.0.0.1:{VTR_PORT}/"
+    if not (VTR_DIR / "server.js").is_file():
+        return False, "server.js not found in Voice-Transcription-Reviewer"
+    node_exe = shutil.which("node")
+    if not node_exe:
+        return False, "Node.js executable not found on system PATH"
+    try:
+        kwargs = {}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen(
+            [node_exe, "server.js"],
+            cwd=str(VTR_DIR),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            **kwargs
+        )
+        for _ in range(15):
+            time.sleep(0.2)
+            if is_port_in_use(VTR_PORT):
+                return True, f"http://127.0.0.1:{VTR_PORT}/"
+        return True, f"http://127.0.0.1:{VTR_PORT}/"
+    except Exception as e:
+        return False, str(e)
+
 
 # Thread-safe pipeline progress tracking
 PIPELINE_STATUS = {
@@ -167,6 +199,100 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
             else:
                 self.send_error(404, f"Segment file not found: {rel_path}")
                 return
+
+        # 3. Installer & Launcher Download Endpoints
+        if path == "/api/download/installer_bat":
+            bat_file = ROOT_DIR / "install.bat"
+            if bat_file.is_file():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Disposition", 'attachment; filename="install.bat"')
+                self.send_header("Content-Length", str(bat_file.stat().st_size))
+                self.end_headers()
+                with open(bat_file, "rb") as f:
+                    shutil.copyfileobj(f, self.wfile)
+                return
+            self.send_error(404, "install.bat not found")
+            return
+
+        if path == "/api/download/installer_exe":
+            exe_file = ROOT_DIR / "Install_SegAUD.exe"
+            if exe_file.is_file():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Disposition", 'attachment; filename="Install_SegAUD.exe"')
+                self.send_header("Content-Length", str(exe_file.stat().st_size))
+                self.end_headers()
+                with open(exe_file, "rb") as f:
+                    shutil.copyfileobj(f, self.wfile)
+                return
+            self.send_error(404, "Install_SegAUD.exe not found")
+            return
+
+        if path == "/api/download/app_exe":
+            exe_file = ROOT_DIR / "SegAUD.exe"
+            if exe_file.is_file():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Disposition", 'attachment; filename="SegAUD.exe"')
+                self.send_header("Content-Length", str(exe_file.stat().st_size))
+                self.end_headers()
+                with open(exe_file, "rb") as f:
+                    shutil.copyfileobj(f, self.wfile)
+                return
+            self.send_error(404, "SegAUD.exe not found")
+            return
+
+        # 4. Local Actions Trigger Endpoints
+        if path == "/api/run_install_locally":
+            try:
+                subprocess.Popen(["cmd.exe", "/c", "start", "cmd.exe", "/k", str(ROOT_DIR / "install.bat")], cwd=str(ROOT_DIR))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "message": "Installer launched in terminal"}).encode("utf-8"))
+            except Exception as e:
+                self.send_error(500, str(e))
+            return
+
+        if path == "/api/launch_app_window":
+            try:
+                launch_desktop_window(f"http://127.0.0.1:{self.server.server_address[1]}/")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True}).encode("utf-8"))
+            except Exception as e:
+                self.send_error(500, str(e))
+            return
+
+        if path == "/api/vtr_status":
+            in_use = is_port_in_use(VTR_PORT)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"running": in_use, "url": f"http://127.0.0.1:{VTR_PORT}/"}).encode("utf-8"))
+            return
+
+        if path == "/api/launch_vtr":
+            started, vtr_url = start_vtr_server()
+            target_url = f"http://127.0.0.1:{VTR_PORT}/auth/segaud-admin?target=/"
+            webbrowser.open(target_url)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "url": target_url}).encode("utf-8"))
+            return
+
+        if path == "/api/launch_vtr_admin":
+            started, vtr_url = start_vtr_server()
+            target_url = f"http://127.0.0.1:{VTR_PORT}/auth/segaud-admin?target=/?tab=upload"
+            webbrowser.open(target_url)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "url": target_url}).encode("utf-8"))
+            return
 
         # Default static file handling from docs/
         super().do_GET()
@@ -309,6 +435,105 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 self.send_error(500, f"Pipeline Error: {str(e)}")
             return
 
+        if path == "/api/sync_to_vtr":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+                payload = json.loads(body) if body else {}
+
+                audio_name = payload.get("audio_name", "").strip() or "audio"
+                segments_data = payload.get("segments", [])
+
+                started, vtr_url = start_vtr_server()
+                if not started:
+                    self.send_response(500)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": False, "error": f"Failed to start VTR server: {vtr_url}"}).encode("utf-8"))
+                    return
+
+                vtr_uploads = VTR_DIR / "uploads"
+                vtr_originals = VTR_DIR / "originals"
+                vtr_data = VTR_DIR / "data"
+                vtr_uploads.mkdir(parents=True, exist_ok=True)
+                vtr_originals.mkdir(parents=True, exist_ok=True)
+                vtr_data.mkdir(parents=True, exist_ok=True)
+
+                # Copy WAV segments into VTR
+                seg_folder = SEGMENTS_DIR / audio_name
+                if seg_folder.is_dir():
+                    for wav_file in seg_folder.glob("*.wav"):
+                        shutil.copy2(str(wav_file), str(vtr_uploads / wav_file.name))
+                        shutil.copy2(str(wav_file), str(vtr_originals / wav_file.name))
+
+                # Build VTR records
+                vtr_records = []
+                for idx, seg in enumerate(segments_data):
+                    seg_id = seg.get("id") or f"{audio_name}_seg{idx+1:05d}"
+                    voice_name = f"{seg_id}.wav" if not seg_id.endswith(".wav") else seg_id
+                    vtr_records.append({
+                        "id": idx,
+                        "voice": voice_name,
+                        "transcription": (seg.get("text") or seg.get("transcript") or "").strip(),
+                        "normalizedTranscription": (seg.get("text") or seg.get("transcript") or "").strip(),
+                        "speaker": seg.get("speaker") or "Speaker 1",
+                        "domain": seg.get("domain") or "",
+                        "backgroundNoise": "",
+                        "audioComplete": "",
+                        "silenceAtBeginning": "",
+                        "silenceAtEnd": "",
+                        "speakingRate": "",
+                        "emotion": "",
+                        "volume": "",
+                        "accent": "",
+                        "status": "verified" if seg.get("verified") else "pending",
+                        "verifiedBy": "SegAUD" if seg.get("verified") else None,
+                        "updatedAt": None
+                    })
+
+                if vtr_records:
+                    records_file = vtr_data / "records.json"
+                    orig_records_file = vtr_data / "records_original.json"
+                    with open(records_file, "w", encoding="utf-8") as f:
+                        json.dump(vtr_records, f, ensure_ascii=False, indent=2)
+                    with open(orig_records_file, "w", encoding="utf-8") as f:
+                        json.dump(vtr_records, f, ensure_ascii=False, indent=2)
+
+                    mapping_csv = vtr_uploads / "mapping.csv"
+                    with open(mapping_csv, "w", encoding="utf-8-sig", newline="") as f:
+                        import csv
+                        writer = csv.DictWriter(f, fieldnames=[
+                            "voice", "orthographic_transcription", "normalized_transcription",
+                            "speaker", "domain", "status", "verified_by"
+                        ])
+                        writer.writeheader()
+                        for r in vtr_records:
+                            writer.writerow({
+                                "voice": r["voice"],
+                                "orthographic_transcription": r["transcription"],
+                                "normalized_transcription": r["normalizedTranscription"],
+                                "speaker": r["speaker"],
+                                "domain": r["domain"],
+                                "status": r["status"],
+                                "verified_by": r["verifiedBy"] or ""
+                            })
+
+                vtr_target_url = f"http://127.0.0.1:{VTR_PORT}/?idx=0"
+                webbrowser.open(vtr_target_url)
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "url": vtr_target_url,
+                    "count": len(vtr_records),
+                    "message": f"Synced {len(vtr_records)} segments to Voice Transcription Reviewer!"
+                }).encode("utf-8"))
+            except Exception as e:
+                self.send_error(500, f"Sync error: {str(e)}")
+            return
+
         self.send_error(404, "Unknown endpoint")
 
 
@@ -378,6 +603,11 @@ def main():
     print(f" * Speech Recognition:  {model_name_disp}")
     print(f" * Segment Output:      {SEGMENTS_DIR.resolve()}")
     print("=" * 65)
+    vtr_ok, vtr_msg = start_vtr_server()
+    if vtr_ok:
+        print(f" * Transcription Review: http://127.0.0.1:{VTR_PORT}/ (Active)")
+    else:
+        print(f" * Transcription Review: Standby ({vtr_msg})")
     print(" Opening desktop application window...")
 
     # Launch desktop window after 0.6 second

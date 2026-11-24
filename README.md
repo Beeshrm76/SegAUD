@@ -10,6 +10,13 @@ The toolkit unites **Silero VAD** for voice activity boundary detection, **pyann
 
 - **Low-Resource Language Focus**: Optimized for regional dialects with custom exception modes for edge-case audio.
 - **pyannote Speaker Diarization & Turn-Splitting**: Automatically detects speaker turns and splits segments where multiple speakers talk into distinct sub-segments labeled `Speaker 1`, `Speaker 2`, etc.
+- **Editable Speaker Labels**: Interactive dropdown in the segments table allows instant label correction, with automatic detection of all unique speakers and an `+ Add Speaker` option for custom names.
+- **Voice-Transcription-Reviewer (Shruti-Lekhan) Workbench Integration**:
+  - Direct 1-click sync of audio segments and Devanagari transcripts into the review workbench (`http://localhost:3000`).
+  - Audio trimming with instant **revert-to-original** recovery (`POST /revert-audio`) to safely undo accidental clips.
+  - Multi-user verifier workflows with quota management and admin dashboards.
+  - Granular audit logging with single-datapoint and full-dataset rollback (`POST /revert-record`, `POST /revert-all`).
+  - Accepts SegAUD format CSVs exclusively for strict data integrity.
 - **Configurable Models & Credentials (⚙️ Settings)**:
   - Hugging Face token stored securely in `localStorage` by default (unlocks gated models like SraVaani-1.0 and pyannote community pipelines).
   - Add custom Hugging Face model repositories (e.g. *Whisper Large v3*, *IndicWav2Vec Hindi*, *Meta MMS 1B*) code-free.
@@ -28,22 +35,27 @@ The toolkit unites **Silero VAD** for voice activity boundary detection, **pyann
 
 ---
 
-## 1. Web Application & Desktop PC App
+## 1. 1-Click PC Installation & Desktop Executable (.exe)
 
-The web interface is located in the `docs/` folder and can be accessed directly in any modern browser or launched as a native standalone desktop app window.
+SegAUD includes a complete automated Windows installer and native launcher executable:
 
-### Running the PC Desktop Application (Recommended)
+### ⚡ 1-Click Automated Installation to PC
+Double-click `install.bat` (or `Install_SegAUD.exe`):
+- Verifies Python installation (Python 3.9 - 3.13).
+- Automatically creates the Python virtual environment (`.\venv`).
+- Installs all dependencies (`torch`, `silero-vad`, `transformers`, etc.).
+- Creates a **Desktop Shortcut** (`SegAUD`) and a **Start Menu Shortcut** with the official SegAUD icon.
+- Automatically compiles and configures the native `SegAUD.exe` application launcher.
 
-Double-click `run_segaud.bat` or run:
+### 🚀 Direct Launch via `SegAUD.exe`
+Double-click `SegAUD.exe`:
+- **Direct Native Execution**: Starts the background speech processing server silently without intrusive terminal popups.
+- **Dedicated Standalone Window**: Opens SegAUD in a borderless native desktop window.
+- **System Tray Integration**: Adds an active SegAUD icon to your Windows notification area (right-click to open in browser, restart server, or cleanly exit).
+- **Single Instance Guard**: Clicking `SegAUD.exe` when already running focuses the existing app window without duplicate background processes.
 
-```powershell
-python app.py
-```
-
-- **Features**: Automatically binds PyTorch, Silero VAD, pyannote diarization, and Devanagari ASR to a clean desktop window.
-- **Local Audio Storage**: Slices audio segments directly into `segments/<audio_name>/`.
-- **Instant Playback**: Plays sliced WAV files straight from disk with interactive `▶ Play` / `⏸ Pause` buttons.
-- **Model Credentials**: Click **⚙️ Settings** in the top navigation bar to save your Hugging Face token or add custom models.
+### 📥 Install App from Web UI
+When using the web interface, click **📥 Install App** in the navigation bar to access 1-click installer triggers, direct `.exe` downloads, or PWA installation.
 
 ---
 
