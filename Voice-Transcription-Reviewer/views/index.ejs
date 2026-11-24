@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shruti-Lekhan — Language Data Collection Platform</title>
+  <meta name="description" content="Review and edit audio transcriptions side-by-side with the audio player." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F1F5F9;
+      --border: #E5E7EB;
+      --border-focus: #2473CC;
+      --primary: #2473CC;
+      --primary-dark: #25408F;
+      --accent: #2473CC;
+      --accent-dark: #25408F;
+      --accent-glow: rgba(36, 115, 204, 0.15);
+      --slate-blue: #B9CDDA;
+      --mid-orange: #EFB179;
+      --dark-blue: #25408F;
+      --blue-grey: #669AD5;
+      --green: #22C55E;
+      --green-dark: #16A34A;
+      --green-glow: rgba(34, 197, 94, 0.15);
+      --yellow: #F59E0B;
+      --red: #EF4444;
+      --text-primary: #111827;
+      --text-secondary: #4B5563;
+      --text-muted: #6B7280;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Lato', system-ui, -apple-system, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .card-title,
+    .header-brand h1 {
+      font-family: 'Plus Jakarta Sans', 'Futura', system-ui, sans-serif;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(36, 115, 204, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(37, 64, 143, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0 28px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(36, 115, 204, 0.25);
+    }
+
+    .header-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-brand h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: var(--primary-dark);
+      margin: 0;
+    }
+
+    .header-tagline {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 5px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-accent {
+      background: #EBF3FC;
+      border-color: #B9CDDA;
+      color: #2473CC;
+      font-weight: 600;
+    }
+
+    .badge-admin {
+      background: #EEF2FF;
+      border-color: #C7D2FE;
+      color: #25408F;
+      font-weight: 700;
+    }
+
+    .badge-verifier {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .badge-quota {
+      background: #FEF3C7;
+      border-color: #FDE68A;
+      color: #92400E;
+      font-weight: 600;
+    }
+
+    .badge-pending {
+      background: #FEF3C7;
+      border-color: #FDE68A;
+      color: #92400E;
+    }
+
+    .badge-verified {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #166534;
+    }
+
+    .badge-edited {
+      background: #EBF3FC;
+      border-color: #B9CDDA;
+      color: #2473CC;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-container {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .glass-card:hover {
+      border-color: #CBD5E1;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .card-icon-blue {
+      background: #EBF3FC;
+      color: #2473CC;
+    }
+
+    .card-icon-purple {
+      background: #EEF2FF;
+      color: #25408F;
+    }
+
+    .card-icon-green {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0.2px;
+      color: var(--text-primary);
+    }
+
+    /* Login & Cards */
+    .login-wrapper {
+      max-width: 440px;
+      margin: 60px auto 0;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .login-hero {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .login-hero .hero-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, #EBF3FC, #EEF2FF);
+      border: 1px solid #B9CDDA;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-hero h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: -0.4px;
+      margin-bottom: 8px;
+    }
+
+    .login-hero p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .login-form {
+      padding: 28px;
+    }
+
+    /* Inputs */
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-transform: none;
+      letter-spacing: 0.2px;
+      margin-bottom: 8px;
+    }
+
+    .input-text,
+    select.input-text {
+      width: 100%;
+      padding: 11px 14px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-text:focus,
+    select.input-text:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(36, 115, 204, 0.15);
+    }
+
+    select.input-text option {
+      background: #FFFFFF;
+      color: var(--text-primary);
+    }
+
+    /* Upload */
+    .upload-wrapper {
+      max-width: 620px;
+      margin: 40px auto 0;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .upload-hero {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .upload-hero .hero-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #EBF3FC, #EEF2FF);
+      border: 1px solid #B9CDDA;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .upload-hero h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .upload-hero p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .upload-form {
+      padding: 28px;
+    }
+
+    .file-drop {
+      position: relative;
+      border: 2px dashed #B9CDDA;
+      border-radius: var(--radius-md);
+      background: #F8FAFC;
+      padding: 24px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .file-drop:hover {
+      border-color: var(--primary);
+      background: #EBF3FC;
+    }
+
+    .file-drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .file-drop-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .file-drop-label {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .file-drop-label strong {
+      color: var(--primary);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .alert-error {
+      background: #FEF2F2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+    }
+
+    .alert-warning {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+
+    .alert-success {
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      color: #166534;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 4px rgba(36, 115, 204, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 8px rgba(37, 64, 143, 0.3);
+    }
+
+    .btn-verify {
+      background: var(--green);
+      color: #FFFFFF;
+      box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    }
+
+    .btn-verify:hover {
+      background: var(--green-dark);
+      box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+    }
+
+    .btn-save {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-save:hover {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+    }
+
+    .btn-nav {
+      background: #F1F5F9;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-nav:hover {
+      background: #E2E8F0;
+      border-color: #CBD5E1;
+    }
+
+    .btn-nav:disabled,
+    .btn-nav[disabled],
+    .btn:disabled,
+    .btn[disabled] {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .btn-ghost {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #DC2626;
+      font-size: 0.8rem;
+      padding: 7px 16px;
+    }
+
+    .btn-ghost:hover {
+      background: #FEE2E2;
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 0.8rem;
+    }
+
+    .btn-header {
+      background: #F1F5F9;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-header:hover {
+      background: #E2E8F0;
+      color: var(--text-primary);
+    }
+
+    /* Trimmer Styles */
+    .trimmer-box {
+      margin-top: 20px;
+      padding: 18px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .trimmer-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0.3px;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .trimmer-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .trimmer-field label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .trimmer-field input {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+
+    /* Progress & Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid var(--primary);
+    }
+
+    .stat-card:nth-child(2) {
+      border-top-color: var(--green);
+    }
+
+    .stat-card:nth-child(3) {
+      border-top-color: var(--mid-orange);
+    }
+
+    .stat-card:nth-child(4) {
+      border-top-color: var(--yellow);
+    }
+
+    .stat-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0.2px;
+    }
+
+    .progress-section {
+      margin-bottom: 28px;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-pct {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--primary-dark);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    .progress-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .progress-count {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Review grid */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+      animation: fadeUp 0.45s ease both;
+    }
+
+    @media (max-width: 860px) {
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .audio-panel {
+      position: sticky;
+      top: 84px;
+    }
+
+    .audio-body {
+      padding: 24px;
+    }
+
+    .audio-file-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .audio-file-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+      animation: pulse-dot 2s infinite;
+    }
+
+    .audio-file-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .audio-player-wrap {
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+    }
+
+    audio {
+      width: 100%;
+      display: block;
+      height: 48px;
+      background: transparent;
+      outline: none;
+    }
+
+    audio::-webkit-media-controls-panel {
+      background: #F1F5F9;
+    }
+
+    .audio-shortcuts {
+      margin-top: 18px;
+    }
+
+    .shortcuts-title {
+      font-size: 0.75rem;
+      text-transform: none;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .shortcut-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-primary);
+    }
+
+    .no-audio {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .no-audio-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    .text-body {
+      padding: 24px;
+    }
+
+    textarea#transcriptionText {
+      width: 100%;
+      min-height: 260px;
+      padding: 16px;
+      background: #FFFFFF;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: 'Lato', system-ui, sans-serif;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea#transcriptionText:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(36, 115, 204, 0.15);
+    }
+
+    textarea#transcriptionText::placeholder {
+      color: var(--text-muted);
+    }
+
+    .char-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 6px;
+    }
+
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .action-bar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Users Table */
+    .users-wrapper {
+      max-width: 1120px;
+      margin: 30px auto 0;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      padding: 0 24px 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0.2px;
+      background: #F8FAFC;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    /* Empty state */
+    .empty-wrapper {
+      max-width: 520px;
+      margin: 80px auto;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .footer-strip {
+      position: relative;
+      z-index: 1;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <a href="/" class="header-brand">
+      <div class="header-logo">🌐</div>
+      <div class="header-brand-text">
+        <h1>Shruti-Lekhan</h1>
+        <span class="header-tagline">Shruti (Listening) + Lekhan (Writing)</span>
+      </div>
+    </a>
+
+    <div class="header-nav">
+      <% if (user) { %>
+        <div class="header-meta">
+          <span class="badge badge-accent">👤 <%= user.username %></span>
+          <span class="badge <%= user.role === 'admin' ? 'badge-admin' : 'badge-verifier' %>">
+            <%= user.role==='admin' ? '⚡ ADMIN' : '✓ VERIFIER' %>
+          </span>
+          <% if (user.role !=='admin' ) { %>
+            <span class="badge badge-quota">
+              🎯 Assigned: Records <%= (user.startIndex || 0) + 1 %> – <%= (user.quota> 0) ? ((user.startIndex || 0) +
+                  user.quota) : 'All' %> (<%= userVerifiedCount %>/<%= user.quota===0 ? '∞' : user.quota %> verified)
+            </span>
+            <% } %>
+        </div>
+
+        <% if (user.role==='admin' ) { %>
+          <a href="/?tab=users" class="btn btn-header btn-sm">👥 Users &amp; Permissions</a>
+          <a href="/?tab=upload" class="btn btn-header btn-sm">📤 Upload Dataset</a>
+          <a href="/?tab=dataset" class="btn btn-header btn-sm">📊 View Dataset</a>
+          <a href="/admin/export-csv" class="btn btn-header btn-sm">📥 Export CSV</a>
+          <a href="/admin/export-zip" class="btn btn-header btn-sm">📦 Export Zip Package</a>
+        <% } else { %>
+          <a href="/?tab=upload" class="btn btn-header btn-sm">📤 Upload Dataset</a>
+          <a href="/?tab=dataset" class="btn btn-header btn-sm">📊 View Dataset</a>
+        <% } %>
+
+            <a href="/logout" class="btn btn-header btn-sm"
+              style="color:#fca5a5;border-color:rgba(239,68,68,0.2);">Logout</a>
+            <% } else { %>
+              <span class="badge">Please Sign In</span>
+              <% } %>
+    </div>
+  </header>
+
+  <main>
+    <% if (mode==='login' ) { %>
+      <!-- LOGIN MODE -->
+      <div class="page-container">
+        <div class="login-wrapper">
+          <div class="login-hero">
+            <div class="hero-icon">🎧</div>
+            <h2>Shruti-Lekhan</h2>
+            <p style="margin-top:6px;font-size:0.9rem;color:var(--text-secondary);">
+              <strong>Shruti (Listening) + Lekhan (Writing)</strong><br />
+              The workbench for transcribing and labeling speech.
+            </p>
+          </div>
+
+          <% if (error) { %>
+            <div class="alert alert-error">⚠️ <%= error %>
+            </div>
+            <% } %>
+              <% if (success) { %>
+                <div class="alert alert-success">✅ <%= success %>
+                </div>
+                <% } %>
+
+                  <div class="glass-card">
+                    <form class="login-form" action="/login" method="POST">
+                      <div class="field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" class="input-text"
+                          placeholder="Enter your username" required autofocus />
+                      </div>
+
+                      <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="input-text"
+                          placeholder="Enter your password" required />
+                      </div>
+
+                      <button type="submit" class="btn btn-primary"
+                        style="width:100%;justify-content:center;margin-top:8px;">
+                        Sign In →
+                      </button>
+                    </form>
+                  </div>
+
+                  <div style="text-align:center;margin-top:20px;font-size:0.78rem;color:var(--text-muted);">
+
+                  </div>
+        </div>
+      </div>
+
+      <% } else if (mode==='users' ) { %>
+        <!-- ADMIN USER, QUOTA & PERMISSION MANAGEMENT MODE -->
+        <div class="page-container">
+          <div class="users-wrapper">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:1.5rem;font-weight:700;">User &amp; Permission Management</h2>
+                <p style="color:var(--text-secondary);font-size:0.88rem;">Create accounts, set record partitions, and
+                  control audio trimming access.</p>
+              </div>
+              <a href="/" class="btn btn-nav">← Back to Workspace</a>
+            </div>
+
+            <% if (error) { %>
+              <div class="alert alert-error">⚠️ <%= error %>
+              </div>
+              <% } %>
+                <% if (success) { %>
+                  <div class="alert alert-success">✅ <%= success %>
+                  </div>
+                  <% } %>
+
+                    <!-- Create User Card -->
+                    <div class="glass-card" style="margin-bottom:28px;">
+                      <div class="card-header">
+                        <div class="card-header-left">
+                          <div class="card-icon card-icon-purple">➕</div>
+                          <span class="card-title">Create New Account</span>
+                        </div>
+                      </div>
+                      <form action="/admin/users/create" method="POST" style="padding:24px;">
+                        <div
+                          style="display:grid;grid-template-columns: 1.1fr 1fr 1fr 0.8fr 0.8fr auto;gap:12px;align-items:start;">
+                          <div class="field" style="margin:0;">
+                            <label for="new_username">Username</label>
+                            <input type="text" id="new_username" name="username" class="input-text"
+                              placeholder="e.g. verifier2" required />
+                          </div>
+                          <div class="field" style="margin:0;">
+                            <label for="new_password">Password</label>
+                            <input type="password" id="new_password" name="password" class="input-text"
+                              placeholder="Min 4 chars" required />
+                          </div>
+                          <div class="field" style="margin:0;">
+                            <label for="new_role">Role</label>
+                            <select id="new_role" name="role" class="input-text">
+                              <option value="verifier">Verifier (Regular User)</option>
+                              <option value="admin">Admin (Full Control)</option>
+                            </select>
+                          </div>
+                          <div class="field" style="margin:0;">
+                            <label for="new_start">Start Record #</label>
+                            <input type="number" id="new_start" name="startRecord" class="input-text" min="1"
+                              value="<%= typeof nextStartIndex !== 'undefined' ? nextStartIndex + 1 : 1 %>" required />
+                            <span class="hint" style="margin-top:4px;display:block;">Auto-assigned</span>
+                          </div>
+                          <div class="field" style="margin:0;">
+                            <label for="new_quota">Quota Count</label>
+                            <input type="number" id="new_quota" name="quota" class="input-text" min="0"
+                              placeholder="0 = All" value="10" />
+                            <span class="hint" style="margin-top:4px;display:block;">0 = Unlimited</span>
+                          </div>
+                          <div class="field" style="margin:0;padding-top:24px;">
+                            <label
+                              style="display:flex;align-items:center;gap:6px;font-size:0.8rem;text-transform:none;cursor:pointer;">
+                              <input type="checkbox" name="canTrim" value="true" checked
+                                style="width:16px;height:16px;" />
+                              <span>Allow Audio Trimming</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div style="margin-top:18px;text-align:right;">
+                          <button type="submit" class="btn btn-primary">Create User Account</button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <!-- Users Table Card -->
+                    <div class="glass-card">
+                      <div class="card-header">
+                        <div class="card-header-left">
+                          <div class="card-icon card-icon-blue">📋</div>
+                          <span class="card-title">Existing Accounts &amp; Permissions (<%= usersList.length %>)</span>
+                        </div>
+                      </div>
+                      <div class="table-container">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Username</th>
+                              <th>Role</th>
+                              <th>Completed</th>
+                              <th>Assigned Range</th>
+                              <th>Trim Access</th>
+                              <th>Update Settings</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% usersList.forEach(u=> { %>
+                              <tr>
+                                <td><strong>
+                                    <%= u.username %>
+                                  </strong></td>
+                                <td>
+                                  <span class="badge <%= u.role === 'admin' ? 'badge-admin' : 'badge-verifier' %>">
+                                    <%= u.role.toUpperCase() %>
+                                  </span>
+                                </td>
+                                <td>
+                                  <span class="badge badge-accent">
+                                    <%= u.verifiedCount %> verified
+                                  </span>
+                                </td>
+                                <td>
+                                  <% if (u.role==='admin' ) { %>
+                                    <span style="color:var(--text-muted);">Full Dataset</span>
+                                    <% } else if (u.quota===0) { %>
+                                      <span class="badge badge-quota">All Records (Unlimited)</span>
+                                      <% } else { %>
+                                        <span class="badge badge-quota">
+                                          Records <%= (u.startIndex || 0) + 1 %> – <%= (u.startIndex || 0) + u.quota %>
+                                        </span>
+                                        <% } %>
+                                </td>
+                                <td>
+                                  <% if (u.role==='admin' ) { %>
+                                    <span class="badge badge-verified">Full Access</span>
+                                    <% } else { %>
+                                      <span class="badge <%= u.canTrim ? 'badge-verified' : 'badge-pending' %>">
+                                        <%= u.canTrim ? '✂️ Allowed' : '🔒 Disabled' %>
+                                      </span>
+                                      <% } %>
+                                </td>
+                                <td>
+                                  <% if (u.role !=='admin' ) { %>
+                                    <form action="/admin/users/update-quota" method="POST"
+                                      style="display:flex;align-items:center;gap:8px;">
+                                      <input type="hidden" name="username" value="<%= u.username %>" />
+                                      <span style="font-size:0.75rem;color:var(--text-muted);">Start #</span>
+                                      <input type="number" name="startRecord" min="1"
+                                        value="<%= (u.startIndex || 0) + 1 %>" class="input-text"
+                                        style="width:60px;padding:4px 6px;font-size:0.8rem;" />
+                                      <span style="font-size:0.75rem;color:var(--text-muted);">Quota</span>
+                                      <input type="number" name="quota" min="0" value="<%= u.quota %>"
+                                        class="input-text" style="width:60px;padding:4px 6px;font-size:0.8rem;" />
+                                      <label
+                                        style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;"
+                                        title="Allow user to trim audio">
+                                        <input type="checkbox" name="canTrim" value="true" <%=u.canTrim ? 'checked' : ''
+                                          %> />
+                                        <span>Trim</span>
+                                      </label>
+                                      <button type="submit" class="btn btn-save btn-sm">Set</button>
+                                    </form>
+                                    <% } else { %>
+                                      <span style="color:var(--text-muted);font-size:0.78rem;">Full Access</span>
+                                      <% } %>
+                                </td>
+                                <td>
+                                  <% if (u.username.toLowerCase() !==user.username.toLowerCase()) { %>
+                                    <form action="/admin/users/delete" method="POST"
+                                      onsubmit="return confirm('Are you sure you want to delete user account &quot;<%= u.username %>&quot;?')">
+                                      <input type="hidden" name="username" value="<%= u.username %>" />
+                                      <button type="submit" class="btn btn-ghost btn-sm"
+                                        style="padding:4px 8px;font-size:0.75rem;">🗑️ Delete</button>
+                                    </form>
+                                    <% } else { %>
+                                      <span style="color:var(--text-muted);font-size:0.78rem;">Active</span>
+                                      <% } %>
+                                </td>
+                              </tr>
+                              <% }); %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+          </div>
+        </div>
+
+        <% } else if (mode==='upload' ) { %>
+          <!-- DATASET UPLOAD MODE (SegAUD Format) -->
+          <div class="page-container">
+            <div class="upload-wrapper">
+              <div class="upload-hero">
+                <div class="hero-icon">🎵</div>
+                <h2>Upload Dataset (SegAUD Format)</h2>
+                <p>Upload a SegAUD CSV file (columns: <code>segment_id/voice</code>, <code>transcript</code>, <code>speaker</code>, <code>domain</code>) and corresponding audio files or ZIP archive.
+                </p>
+              </div>
+
+              <% if (error) { %>
+                <div class="alert alert-error">⚠️ <%= error %>
+                </div>
+                <% } %>
+                  <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+
+                      <div class="glass-card">
+                        <form class="upload-form" id="uploadForm" action="/upload" method="POST"
+                          enctype="multipart/form-data">
+
+                          <div class="field">
+                            <label for="csvFile">SegAUD CSV Mapping File</label>
+                            <div class="file-drop" id="csvDropZone">
+                              <input type="file" id="csvFile" name="csvFile" accept=".csv" required />
+                              <div class="file-drop-icon">📄</div>
+                              <div class="file-drop-label" id="csvLabel">
+                                <strong>Click to choose</strong> or drag &amp; drop<br />
+                                <span>Columns: <code>segment_id</code>, <code>transcript</code>, <code>speaker</code>, <code>domain</code></span>
+                              </div>
+                            </div>
+                            <p class="hint">SegAUD format: "segment_id" or "voice", and "transcript" or "orthographic_transcription"</p>
+                          </div>
+
+                          <div class="field">
+                            <label for="audioFiles">Audio Files / ZIP</label>
+                            <div class="file-drop" id="audioDropZone">
+                              <input type="file" id="audioFiles" name="audioFiles"
+                                accept=".wav,.mp3,.ogg,.m4a,.flac,.zip" multiple />
+                              <div class="file-drop-icon">🎵</div>
+                              <div class="file-drop-label" id="audioLabel">
+                                <strong>Click to choose</strong> or drag &amp; drop<br />
+                                <span>.wav .mp3 .ogg .m4a .flac — or a single .zip</span>
+                              </div>
+                            </div>
+                            <p class="hint">ZIP archives will be extracted automatically into the uploads directory.</p>
+                          </div>
+
+                          <div class="action-bar" style="margin-top:8px;">
+                            <button type="submit" id="uploadBtn" class="btn btn-primary"
+                              style="width:100%;justify-content:center;">
+                              Upload Dataset &amp; Initialize Review →
+                            </button>
+                          </div>
+
+                        </form>
+                      </div>
+            </div>
+          </div>
+
+          <% } else if (mode==='dataset' ) { %>
+            <!-- VIEW DATASET MODE -->
+            <div class="page-container">
+
+              <% if (typeof records !== 'undefined' && records.length > 0) { %>
+
+              <!-- Dataset Stats -->
+              <div class="stats-grid" style="margin-bottom:20px;">
+                <div class="stat-card">
+                  <span class="stat-num" style="color:var(--accent);"><%= datasetStats.total %></span>
+                  <span class="stat-label">Total Records</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-num" style="color:var(--green);"><%= datasetStats.verified %></span>
+                  <span class="stat-label">Verified ✅</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-num" style="color:var(--accent);"><%= datasetStats.edited %></span>
+                  <span class="stat-label">Edited ✏️</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-num" style="color:var(--yellow);"><%= datasetStats.pending %></span>
+                  <span class="stat-label">Pending ⏳</span>
+                </div>
+              </div>
+
+              <!-- Search & Filter Bar -->
+              <div class="glass-card" style="padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <div style="flex:1;min-width:200px;">
+                  <input type="text" id="datasetSearch" class="input-text" placeholder="🔍 Search transcriptions, speakers, domains..." style="width:100%;margin:0;" oninput="filterDatasetTable()">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <select id="statusFilter" class="input-text" style="width:auto;min-width:120px;margin:0;" onchange="filterDatasetTable()">
+                    <option value="all">All Status</option>
+                    <option value="verified">✅ Verified</option>
+                    <option value="edited">✏️ Edited</option>
+                    <option value="pending">⏳ Pending</option>
+                  </select>
+                  <span id="filteredCount" class="badge" style="white-space:nowrap;"><%= records.length %> records</span>
+                </div>
+              </div>
+
+              <!-- Dataset Table -->
+              <div class="glass-card" style="padding:0;overflow:hidden;">
+                <div style="overflow-x:auto;max-height:65vh;overflow-y:auto;">
+                  <table class="dataset-table" id="datasetTable">
+                    <thead style="position:sticky;top:0;z-index:2;">
+                      <tr>
+                        <th style="width:50px;text-align:center;">#</th>
+                        <th style="width:60px;text-align:center;">Play</th>
+                        <th style="min-width:140px;">Audio File</th>
+                        <th style="min-width:250px;">Transcription</th>
+                        <th style="min-width:100px;">Speaker</th>
+                        <th style="min-width:100px;">Domain</th>
+                        <th style="width:90px;text-align:center;">Status</th>
+                        <th style="min-width:100px;">Verified By</th>
+                        <th style="min-width:140px;">Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% records.forEach(function(rec, i) { %>
+                      <tr class="dataset-row" data-status="<%= rec.status || 'pending' %>" data-search="<%= (rec.transcription || '').toLowerCase() %> <%= (rec.normalizedTranscription || '').toLowerCase() %> <%= (rec.speaker || '').toLowerCase() %> <%= (rec.domain || '').toLowerCase() %> <%= (rec.voice || '').toLowerCase() %>">
+                        <td style="text-align:center;color:var(--text-muted);font-size:0.8rem;"><%= i + 1 %></td>
+                        <td style="text-align:center;">
+                          <% if (rec.voice) { %>
+                          <button class="btn btn-sm dataset-play-btn" onclick="toggleDatasetAudio(this, '/uploads/<%= rec.voice %>')" title="Play audio" style="padding:4px 8px;min-width:0;">
+                            ▶️
+                          </button>
+                          <% } else { %>
+                          <span style="color:var(--text-muted);font-size:0.75rem;">—</span>
+                          <% } %>
+                        </td>
+                        <td style="font-size:0.8rem;word-break:break-all;color:var(--text-secondary);"><%= rec.voice || '—' %></td>
+                        <td style="font-size:0.85rem;line-height:1.4;">
+                          <div style="max-height:3.6em;overflow:hidden;text-overflow:ellipsis;" title="<%= rec.transcription || '' %>">
+                            <%= rec.transcription || rec.normalizedTranscription || '—' %>
+                          </div>
+                        </td>
+                        <td><span class="badge" style="font-size:0.75rem;"><%= rec.speaker || '—' %></span></td>
+                        <td><span class="badge badge-accent" style="font-size:0.75rem;"><%= rec.domain || '—' %></span></td>
+                        <td style="text-align:center;">
+                          <% if (rec.status === 'verified') { %>
+                            <span style="color:var(--green);font-weight:600;font-size:0.8rem;">✅</span>
+                          <% } else if (rec.status === 'edited') { %>
+                            <span style="color:var(--accent);font-weight:600;font-size:0.8rem;">✏️</span>
+                          <% } else { %>
+                            <span style="color:var(--yellow);font-weight:600;font-size:0.8rem;">⏳</span>
+                          <% } %>
+                        </td>
+                        <td style="font-size:0.8rem;color:var(--text-secondary);"><%= rec.verifiedBy || '—' %></td>
+                        <td style="font-size:0.75rem;color:var(--text-muted);"><%= rec.updatedAt ? new Date(rec.updatedAt).toLocaleString() : '—' %></td>
+                      </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <% } else { %>
+              <!-- No records -->
+              <div class="glass-card" style="padding:40px;text-align:center;">
+                <div style="font-size:3rem;margin-bottom:16px;">📂</div>
+                <h2 style="font-size:1.3rem;margin-bottom:8px;">No Dataset Loaded</h2>
+                <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">
+                  Upload a SegAUD dataset to view records here.
+                </p>
+                <a href="/?tab=upload" class="btn btn-primary">📤 Upload Dataset</a>
+              </div>
+              <% } %>
+
+            </div>
+
+            <style>
+              .dataset-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.88rem;
+              }
+              .dataset-table thead {
+                background: var(--card-bg);
+                border-bottom: 2px solid var(--border);
+              }
+              .dataset-table th {
+                padding: 10px 12px;
+                text-align: left;
+                font-weight: 600;
+                font-size: 0.78rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+              }
+              .dataset-table td {
+                padding: 8px 12px;
+                border-bottom: 1px solid var(--border);
+                vertical-align: middle;
+              }
+              .dataset-row {
+                transition: background 0.15s;
+              }
+              .dataset-row:hover {
+                background: rgba(99, 102, 241, 0.06);
+              }
+              .dataset-row.hidden-row {
+                display: none;
+              }
+              .dataset-play-btn {
+                background: rgba(99, 102, 241, 0.1) !important;
+                border: 1px solid rgba(99, 102, 241, 0.2) !important;
+                border-radius: 50% !important;
+                width: 32px !important;
+                height: 32px !important;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 0.85rem;
+              }
+              .dataset-play-btn:hover {
+                background: rgba(99, 102, 241, 0.2) !important;
+              }
+              .dataset-play-btn.playing {
+                background: rgba(239, 68, 68, 0.15) !important;
+                border-color: rgba(239, 68, 68, 0.3) !important;
+              }
+            </style>
+
+            <script>
+              // Dataset audio player
+              let currentDatasetAudio = null;
+              let currentDatasetBtn = null;
+
+              function toggleDatasetAudio(btn, src) {
+                if (currentDatasetAudio && currentDatasetBtn === btn) {
+                  currentDatasetAudio.pause();
+                  currentDatasetAudio = null;
+                  btn.textContent = '▶️';
+                  btn.classList.remove('playing');
+                  currentDatasetBtn = null;
+                  return;
+                }
+                if (currentDatasetAudio) {
+                  currentDatasetAudio.pause();
+                  if (currentDatasetBtn) {
+                    currentDatasetBtn.textContent = '▶️';
+                    currentDatasetBtn.classList.remove('playing');
+                  }
+                }
+                currentDatasetAudio = new Audio(src);
+                currentDatasetBtn = btn;
+                btn.textContent = '⏹️';
+                btn.classList.add('playing');
+                currentDatasetAudio.play();
+                currentDatasetAudio.onended = function() {
+                  btn.textContent = '▶️';
+                  btn.classList.remove('playing');
+                  currentDatasetAudio = null;
+                  currentDatasetBtn = null;
+                };
+              }
+
+              // Search & Filter
+              function filterDatasetTable() {
+                const query = document.getElementById('datasetSearch').value.toLowerCase().trim();
+                const statusFilter = document.getElementById('statusFilter').value;
+                const rows = document.querySelectorAll('.dataset-row');
+                let visibleCount = 0;
+
+                rows.forEach(function(row) {
+                  const searchData = row.getAttribute('data-search') || '';
+                  const rowStatus = row.getAttribute('data-status') || 'pending';
+                  const matchesSearch = !query || searchData.includes(query);
+                  const matchesStatus = statusFilter === 'all' || rowStatus === statusFilter;
+
+                  if (matchesSearch && matchesStatus) {
+                    row.classList.remove('hidden-row');
+                    visibleCount++;
+                  } else {
+                    row.classList.add('hidden-row');
+                  }
+                });
+
+                document.getElementById('filteredCount').textContent = visibleCount + ' record' + (visibleCount !== 1 ? 's' : '');
+              }
+            </script>
+
+          <% } else if (mode==='empty' ) { %>
+            <!-- EMPTY MODE FOR VERIFIERS -->
+            <div class="page-container">
+              <div class="glass-card empty-wrapper" style="padding:40px;">
+                <div class="empty-icon">📂</div>
+                <h2 style="font-size:1.4rem;margin-bottom:10px;">No Dataset Available</h2>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:24px;">
+                  An Administrator has not uploaded any audio transcriptions yet. Please check back later or contact
+                  your Admin to initiate the review workflow.
+                </p>
+                <span class="badge badge-accent">Role: Verifier</span>
+              </div>
+            </div>
+
+            <% } else { %>
+              <!-- REVIEW MODE -->
+              <div class="page-container">
+
+                <% if (error) { %>
+                  <div class="alert alert-error">⚠️ <%= error %>
+                  </div>
+                  <% } %>
+                    <% if (saved) { %>
+                      <div class="alert alert-success">✅ Transcription saved and status updated!</div>
+                      <% } %>
+
+                        <% if (typeof isQuotaReached !=='undefined' && isQuotaReached) { %>
+                          <div class="alert alert-warning">
+                            ⚠️ <strong>Quota Limit Reached:</strong> You have completed your assigned quota of <strong>
+                              <%= user.quota %>
+                            </strong> verifications. Please contact an Administrator to increase your limit.
+                          </div>
+                          <% } %>
+
+                            <!-- Overview Stats -->
+                            <div class="stats-grid">
+                              <div class="stat-card">
+                                <span class="stat-num" style="color:var(--accent);">
+                                  <%= stats.total %>
+                                </span>
+                                <span class="stat-label">Total Dataset Records</span>
+                              </div>
+                              <div class="stat-card">
+                                <span class="stat-num" style="color:var(--green);">
+                                  <%= stats.verified %>
+                                </span>
+                                <span class="stat-label">Verified ✅</span>
+                              </div>
+                              <div class="stat-card">
+                                <span class="stat-num" style="color:var(--accent);">
+                                  <%= stats.edited %>
+                                </span>
+                                <span class="stat-label">Edited ✏️</span>
+                              </div>
+                              <div class="stat-card">
+                                <span class="stat-num" style="color:var(--yellow);">
+                                  <%= stats.pending %>
+                                </span>
+                                <span class="stat-label">Pending ⏳</span>
+                              </div>
+                            </div>
+
+                            <div class="progress-section">
+                              <div class="progress-meta">
+                                <div class="progress-meta-left">
+                                  <span class="progress-pct">
+                                    <%= Math.round(((assignedRelativeIdx + 1) / assignedTotal) * 100) %>%
+                                  </span>
+                                  <span class="progress-sub">assigned progress</span>
+                                </div>
+                                <span class="progress-count">
+                                  Dataset Record <%= idx + 1 %> of <%= total %> &nbsp;•&nbsp; Assigned item <%=
+                                        assignedRelativeIdx + 1 %> of <%= assignedTotal %>
+                                </span>
+                              </div>
+                              <div class="progress-track">
+                                <div class="progress-fill"
+                                  style="width: <%= Math.round(((assignedRelativeIdx + 1) / assignedTotal) * 100) %>%">
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="review-grid">
+
+                              <!-- LEFT: Audio Panel & Trimmer -->
+                              <div class="glass-card audio-panel">
+                                <div class="card-header">
+                                  <div class="card-header-left">
+                                    <div class="card-icon card-icon-blue">🔊</div>
+                                    <span class="card-title">Audio Player</span>
+                                  </div>
+                                  <% if (record && record.status) { %>
+                                    <span class="badge badge-<%= record.status %>">
+                                      <%= record.status==='verified' ? '✅ VERIFIED' : (record.status==='edited'
+                                        ? '✏️ EDITED' : '⏳ PENDING' ) %>
+                                    </span>
+                                    <% } %>
+                                </div>
+                                <div class="audio-body">
+                                  <% if (audioFile) { %>
+                                    <div class="audio-file-info">
+                                      <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+                                        <div class="audio-file-dot"></div>
+                                        <span class="audio-file-name">
+                                          <%= record.voice %>
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div class="audio-player-wrap">
+                                      <audio id="audioPlayer" controls preload="auto"
+                                        src="<%= audioFile %>?t=<%= record && record.updatedAt ? new Date(record.updatedAt).getTime() : Date.now() %>"></audio>
+                                    </div>
+
+                                    <% if (record.verifiedBy) { %>
+                                      <div
+                                        style="margin-top:14px;padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:6px;font-size:0.75rem;color:var(--text-muted);display:flex;justify-content:space-between;">
+                                        <span>Updated by: <strong style="color:var(--text-secondary);">
+                                            <%= record.verifiedBy %>
+                                          </strong></span>
+                                        <span>
+                                          <%= record.updatedAt ? new Date(record.updatedAt).toLocaleTimeString() : '' %>
+                                        </span>
+                                      </div>
+                                      <% } %>
+
+                                        <!-- AUDIO TRIMMER BOX (Conditionally rendered based on Admin permission) -->
+                                        <% if (typeof canTrimAudio !=='undefined' && canTrimAudio) { %>
+                                          <div class="trimmer-box">
+                                            <div class="trimmer-title">
+                                              <span>✂️ Audio Trimmer</span>
+                                              <span style="font-size:0.7rem;color:var(--text-muted);">Slice &amp;
+                                                Overwrite File</span>
+                                            </div>
+                                            <div class="trimmer-inputs">
+                                              <div class="trimmer-field">
+                                                <label for="trimStart">Start (sec)</label>
+                                                <input type="number" id="trimStart" class="input-text" step="0.1"
+                                                  min="0" value="0.0" />
+                                              </div>
+                                              <div class="trimmer-field">
+                                                <label for="trimEnd">End (sec)</label>
+                                                <input type="number" id="trimEnd" class="input-text" step="0.1" min="0"
+                                                  placeholder="Duration" />
+                                              </div>
+                                            </div>
+                                            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                                              <button type="button" onclick="setTrimStartCurrent()"
+                                                class="btn btn-save btn-sm" style="flex:1;justify-content:center;">📍
+                                                Set Start (Current)</button>
+                                              <button type="button" onclick="setTrimEndCurrent()"
+                                                class="btn btn-save btn-sm" style="flex:1;justify-content:center;">📍
+                                                Set End (Current)</button>
+                                            </div>
+                                            <div style="display:flex;gap:6px;">
+                                              <button type="button" onclick="previewTrimmed()"
+                                                class="btn btn-nav btn-sm" style="flex:1;justify-content:center;">▶
+                                                Preview Segment</button>
+                                              <button type="button" id="trimSaveBtn" onclick="executeTrimAndSave()"
+                                                class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">✂️
+                                                Trim &amp; Save File</button>
+                                            </div>
+                                            <button type="button" id="revertAudioBtn" onclick="revertAudio(<%= idx %>)"
+                                              class="btn btn-warning btn-sm" style="width:100%;margin-top:8px;justify-content:center;background:#F59E0B;color:#fff;" title="Revert to original untrimmed audio">
+                                              ↩ Revert to Original Audio
+                                            </button>
+                                          </div>
+                                          <% } else { %>
+                                            <div
+                                              style="margin-top:16px;padding:10px;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:var(--radius-md);text-align:center;font-size:0.76rem;color:var(--text-muted);">
+                                              🔒 Audio Trimming: Disabled by Admin for your account
+                                            </div>
+                                            <% } %>
+
+                                              <!-- AUDIO METADATA CARD (Left Audio Panel) -->
+                                              <div
+                                                style="margin-top:20px;padding:16px;background:#F8FAFC;border:1px solid var(--border);border-radius:var(--radius-md);">
+                                                <div
+                                                  style="font-size:0.8rem;font-weight:700;color:var(--primary-dark);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                                                  <span>📊 Audio Metadata</span>
+                                                </div>
+
+                                                <!-- 1. Audio Quality Metadata (Required) -->
+                                                <div
+                                                  style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--border);">
+                                                  <span
+                                                    style="font-size:0.74rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:8px;">1.
+                                                    Audio Quality Metadata <span
+                                                      style="color:var(--red);">*</span></span>
+                                                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Background Noise</label>
+                                                      <select name="backgroundNoise" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.backgroundNoise || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="None" <%=record && record.status !== 'pending' && record.backgroundNoise==='None' ? 'selected' : '' %>>None</option>
+                                                        <option value="Low" <%=record && record.status !== 'pending' && record.backgroundNoise==='Low' ? 'selected' : '' %>>Low</option>
+                                                        <option value="Medium" <%=record && record.status !== 'pending' && record.backgroundNoise==='Medium' ? 'selected' : '' %>>Medium</option>
+                                                        <option value="High" <%=record && record.status !== 'pending' && record.backgroundNoise==='High' ? 'selected' : '' %>>High</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Audio Complete</label>
+                                                      <select name="audioComplete" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.audioComplete || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="Yes" <%=record && record.status !== 'pending' && record.audioComplete==='Yes' ? 'selected' : '' %>>Yes</option>
+                                                        <option value="No" <%=record && record.status !== 'pending' && record.audioComplete==='No' ? 'selected' : '' %>>No</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Silence at Beginning</label>
+                                                      <select name="silenceAtBeginning" form="saveForm"
+                                                        class="input-text" style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.silenceAtBeginning || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="No" <%=record && record.status !== 'pending' && record.silenceAtBeginning==='No' ? 'selected' : '' %>>No</option>
+                                                        <option value="Yes" <%=record && record.status !== 'pending' && record.silenceAtBeginning==='Yes' ? 'selected' : '' %>>Yes</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Silence at End</label>
+                                                      <select name="silenceAtEnd" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.silenceAtEnd || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="No" <%=record && record.status !== 'pending' && record.silenceAtEnd==='No' ? 'selected' : '' %>>No</option>
+                                                        <option value="Yes" <%=record && record.status !== 'pending' && record.silenceAtEnd==='Yes' ? 'selected' : '' %>>Yes</option>
+                                                      </select>
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <!-- 2. Speech Characteristics (Recommended) -->
+                                                <div>
+                                                  <span
+                                                    style="font-size:0.74rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:8px;">2.
+                                                    Speech Characteristics</span>
+                                                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Speaking Rate</label>
+                                                      <select name="speakingRate" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.speakingRate || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="Slow" <%=record && record.status !== 'pending' && record.speakingRate==='Slow' ? 'selected' : '' %>>Slow</option>
+                                                        <option value="Normal" <%=record && record.status !== 'pending' && record.speakingRate==='Normal' ? 'selected' : '' %>>Normal</option>
+                                                        <option value="Fast" <%=record && record.status !== 'pending' && record.speakingRate==='Fast' ? 'selected' : '' %>>Fast</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Emotion</label>
+                                                      <select name="emotion" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.emotion || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="Neutral" <%=record && record.status !== 'pending' && record.emotion==='Neutral' ? 'selected' : '' %>>Neutral</option>
+                                                        <option value="Happy" <%=record && record.status !== 'pending' && record.emotion==='Happy' ? 'selected' : '' %>>Happy</option>
+                                                        <option value="Sad" <%=record && record.status !== 'pending' && record.emotion==='Sad' ? 'selected' : '' %>>Sad</option>
+                                                        <option value="Angry" <%=record && record.status !== 'pending' && record.emotion==='Angry' ? 'selected' : '' %>>Angry</option>
+                                                        <option value="Excited" <%=record && record.status !== 'pending' && record.emotion==='Excited' ? 'selected' : '' %>>Excited</option>
+                                                        <option value="Other" <%=record && record.status !== 'pending' && record.emotion==='Other' ? 'selected' : '' %>>Other</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Volume</label>
+                                                      <select name="volume" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.volume || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="Low" <%=record && record.status !== 'pending' && record.volume==='Low' ? 'selected' : '' %>>Low</option>
+                                                        <option value="Normal" <%=record && record.status !== 'pending' && record.volume==='Normal' ? 'selected' : '' %>>Normal</option>
+                                                        <option value="Loud" <%=record && record.status !== 'pending' && record.volume==='Loud' ? 'selected' : '' %>>Loud</option>
+                                                      </select>
+                                                    </div>
+
+                                                    <div class="field" style="margin:0;">
+                                                      <label style="font-size:0.72rem;">Accent</label>
+                                                      <select name="accent" form="saveForm" class="input-text"
+                                                        style="padding:6px 8px;font-size:0.8rem;">
+                                                        <option value="" <%=!record || !record.accent || record.status === 'pending' ? 'selected' : '' %>>-- Select --</option>
+                                                        <option value="Nepali" <%=record && record.status !== 'pending' && record.accent==='Nepali' ? 'selected' : '' %>>Nepali</option>
+                                                        <option value="Regional" <%=record && record.status !== 'pending' && record.accent==='Regional' ? 'selected' : '' %>>Regional</option>
+                                                        <option value="Foreign" <%=record && record.status !== 'pending' && record.accent==='Foreign' ? 'selected' : '' %>>Foreign</option>
+                                                      </select>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div class="audio-shortcuts">
+                                                <div class="shortcuts-title">Keyboard Shortcuts</div>
+                                                <div class="shortcut-list">
+                                                  <div class="shortcut-item">
+                                                    <span>Play / Pause</span>
+                                                    <kbd class="kbd">Space</kbd>
+                                                  </div>
+                                                  <div class="shortcut-item">
+                                                    <span>Save &amp; Verify</span>
+                                                    <div style="display:flex;gap:4px;"><kbd class="kbd">⌘</kbd><kbd
+                                                        class="kbd">Enter</kbd></div>
+                                                  </div>
+                                                  <div class="shortcut-item">
+                                                    <span>Previous record</span>
+                                                    <div style="display:flex;gap:4px;"><kbd class="kbd">⌥</kbd><kbd
+                                                        class="kbd">←</kbd></div>
+                                                  </div>
+                                                  <div class="shortcut-item">
+                                                    <span>Next record</span>
+                                                    <div style="display:flex;gap:4px;"><kbd class="kbd">⌥</kbd><kbd
+                                                        class="kbd">→</kbd></div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <% } else { %>
+                                                <div class="no-audio">
+                                                  <div class="no-audio-icon">🔇</div>
+                                                  <p>No audio file found for:
+                                                    <code><%= record ? record.voice : 'N/A' %></code>
+                                                  </p>
+                                                </div>
+                                                <% } %>
+                                </div>
+                              </div>
+
+                              <!-- RIGHT: Transcription Panel -->
+                              <div class="glass-card text-panel">
+                                <div class="card-header">
+                                  <div class="card-header-left">
+                                    <div class="card-icon card-icon-green">📝</div>
+                                    <span class="card-title">transcription</span>
+                                  </div>
+                                </div>
+                                <div class="text-body">
+                                  <form id="saveForm" action="/save" method="POST">
+                                    <input type="hidden" name="idx" value="<%= idx %>" />
+                                    <input type="hidden" id="actionField" name="action" value="save" />
+
+                                    <div style="margin-bottom:6px;">
+                                      <label for="transcriptionText"
+                                        style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);">orthographic_transcription</label>
+                                    </div>
+                                    <textarea id="transcriptionText" name="transcription" autofocus
+                                      style="min-height:160px;"
+                                      placeholder="Review and correct orthographic transcription here…" <%=(typeof
+                                      isQuotaReached !=='undefined' && isQuotaReached) ? 'disabled' : '' %>
+              ><%= record ? record.transcription : '' %></textarea>
+                                    <div class="char-count">
+                                      <span id="charNum">
+                                        <%= record && record.transcription ? record.transcription.length : 0 %>
+                                      </span> characters
+                                    </div>
+
+                                    <!-- Normalized Transcription Field -->
+                                    <div style="margin-top:20px;">
+                                      <div
+                                        style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+                                        <label for="normalizedText"
+                                          style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);">normalized_transcription</label>
+                                        <button type="button" onclick="copyFromOrthographic()"
+                                          class="btn btn-save btn-sm" style="padding:3px 10px;font-size:0.75rem;">📋
+                                          Copy from above</button>
+                                      </div>
+                                      <textarea id="normalizedText" name="normalizedTranscription"
+                                        style="min-height:140px;" class="input-text"
+                                        placeholder="Enter expanded/normalized transcription (numbers expanded, abbreviations spelled out, etc.)…"
+                                        <%=(typeof isQuotaReached !=='undefined' && isQuotaReached) ? 'disabled' : ''
+                                        %>><%= record ? (record.normalizedTranscription || '') : '' %></textarea>
+                                      <div class="char-count">
+                                        <span id="normCharNum">
+                                          <%= record && record.normalizedTranscription ?
+                                            record.normalizedTranscription.length : 0 %>
+                                        </span> characters
+                                      </div>
+                                    </div>
+                                    <div class="action-bar">
+                                      <% if (idx> minIdx) { %>
+                                        <a href="/?idx=<%= idx - 1 %>" id="prevBtn" class="btn btn-nav">← Prev</a>
+                                        <% } else { %>
+                                          <button type="button" id="prevBtn" class="btn btn-nav" disabled>←
+                                            Prev</button>
+                                          <% } %>
+                                            <% if (idx < maxIdx) { %>
+                                              <a href="/?idx=<%= idx + 1 %>" id="nextBtn" class="btn btn-nav">Next →</a>
+                                              <% } else { %>
+                                                <button type="button" id="nextBtn" class="btn btn-nav" disabled>Next
+                                                  →</button>
+                                                <% } %>
+
+                                                  <div class="action-bar-right">
+                                                    <button type="button" onclick="revertRecord(<%= idx %>)"
+                                                      class="btn btn-ghost" style="border:1px solid var(--border);color:var(--text-secondary);" title="Revert this record's transcription and audio to baseline">
+                                                      ↩ Revert Record
+                                                    </button>
+                                                    <button type="submit"
+                                                      onclick="document.getElementById('actionField').value='save'"
+                                                      class="btn btn-save" <%=(typeof isQuotaReached !=='undefined' &&
+                                                      isQuotaReached) ? 'disabled' : '' %>>
+                                                      💾 Save Draft
+                                                    </button>
+                                                    <button type="submit"
+                                                      onclick="document.getElementById('actionField').value='verify'"
+                                                      class="btn btn-verify" <%=(typeof isQuotaReached !=='undefined' &&
+                                                      isQuotaReached) ? 'disabled' : '' %>>
+                                                      ✅ Mark as Verified
+                                                    </button>
+                                                  </div>
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+
+                            </div>
+
+                            <% if (user.role==='admin' ) { %>
+                              <div style="text-align:right; margin-top: 24px;">
+                                <button type="button" onclick="revertAllDataset()" class="btn btn-ghost" style="color:var(--yellow);border:1px solid var(--yellow);margin-right:10px;" title="Revert entire dataset to original baseline">
+                                  ↩ Revert Dataset to Originals
+                                </button>
+                                <form action="/reset" method="POST"
+                                  onsubmit="return confirm('Clear all current dataset records and start over?')">
+                                  <button type="submit" class="btn btn-ghost">↩ Reset Current Dataset</button>
+                                </form>
+                              </div>
+                              <% } %>
+
+              </div>
+
+              <script>
+                const audio = document.getElementById('audioPlayer');
+                const trimStart = document.getElementById('trimStart');
+                const trimEnd = document.getElementById('trimEnd');
+
+                if (audio) {
+                  audio.addEventListener('loadedmetadata', () => {
+                    if (trimEnd && !trimEnd.value) {
+                      trimEnd.value = audio.duration.toFixed(1);
+                    }
+                  });
+                }
+
+                function setTrimStartCurrent() {
+                  if (audio && trimStart) {
+                    trimStart.value = audio.currentTime.toFixed(1);
+                  }
+                }
+
+                function setTrimEndCurrent() {
+                  if (audio && trimEnd) {
+                    trimEnd.value = audio.currentTime.toFixed(1);
+                  }
+                }
+
+                function previewTrimmed() {
+                  if (!audio) return;
+                  const start = parseFloat(trimStart.value) || 0;
+                  const end = parseFloat(trimEnd.value) || audio.duration;
+                  audio.currentTime = start;
+                  audio.play();
+
+                  const checkStop = () => {
+                    if (audio.currentTime >= end) {
+                      audio.pause();
+                      audio.removeEventListener('timeupdate', checkStop);
+                    }
+                  };
+                  audio.addEventListener('timeupdate', checkStop);
+                }
+
+                function bufferToWav(abuffer) {
+                  const numOfChan = abuffer.numberOfChannels;
+                  const length = abuffer.length * numOfChan * 2 + 44;
+                  const buffer = new ArrayBuffer(length);
+                  const view = new DataView(buffer);
+                  const channels = [];
+                  let sampleRate = abuffer.sampleRate;
+                  let offset = 0;
+                  let pos = 0;
+
+                  function writeString(str) {
+                    for (let i = 0; i < str.length; i++) {
+                      view.setUint8(pos++, str.charCodeAt(i));
+                    }
+                  }
+                  function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+                  function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+                  writeString('RIFF');
+                  setUint32(length - 8);
+                  writeString('WAVE');
+                  writeString('fmt ');
+                  setUint32(16);
+                  setUint16(1);
+                  setUint16(numOfChan);
+                  setUint32(sampleRate);
+                  setUint32(sampleRate * 2 * numOfChan);
+                  setUint16(numOfChan * 2);
+                  setUint16(16);
+                  writeString('data');
+                  setUint32(length - pos - 4);
+
+                  for (let i = 0; i < abuffer.numberOfChannels; i++) {
+                    channels.push(abuffer.getChannelData(i));
+                  }
+
+                  while (offset < abuffer.length) {
+                    for (let i = 0; i < numOfChan; i++) {
+                      let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+                      view.setInt16(pos, sample, true);
+                      pos += 2;
+                    }
+                    offset++;
+                  }
+                  return buffer;
+                }
+
+                async function executeTrimAndSave() {
+                  if (!confirm("Are you sure you want to trim and overwrite the original file? This cannot be undone. Click on Preview Segment for listening the trimmed segment.")) {
+                    return;
+                  }
+                  if (!audio) return;
+                  const trimBtn = document.getElementById('trimSaveBtn');
+                  const start = parseFloat(trimStart.value) || 0;
+                  const end = parseFloat(trimEnd.value) || audio.duration;
+
+                  if (end <= start) {
+                    alert('End time must be greater than start time.');
+                    return;
+                  }
+
+                  try {
+                    trimBtn.disabled = true;
+                    trimBtn.textContent = 'Trimming…';
+
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const response = await fetch(audio.src);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+                    const sampleRate = decodedBuffer.sampleRate;
+                    const startSample = Math.floor(start * sampleRate);
+                    const endSample = Math.min(decodedBuffer.length, Math.floor(end * sampleRate));
+                    const newLength = endSample - startSample;
+
+                    if (newLength <= 0) {
+                      throw new Error('Invalid sample range for trimming.');
+                    }
+
+                    const trimmedBuffer = audioCtx.createBuffer(
+                      decodedBuffer.numberOfChannels,
+                      newLength,
+                      sampleRate
+                    );
+
+                    for (let c = 0; c < decodedBuffer.numberOfChannels; c++) {
+                      const origData = decodedBuffer.getChannelData(c);
+                      const trimmedData = trimmedBuffer.getChannelData(c);
+                      for (let i = 0; i < newLength; i++) {
+                        trimmedData[i] = origData[startSample + i];
+                      }
+                    }
+
+                    const wavArrayBuffer = bufferToWav(trimmedBuffer);
+                    const blob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+
+                    const formData = new FormData();
+                    formData.append('idx', '<%= idx %>');
+                    formData.append('audioFiles', blob, '<%= record ? record.voice : "audio.wav" %>');
+
+                    const saveRes = await fetch('/trim-audio', {
+                      method: 'POST',
+                      body: formData
+                    });
+
+                    const resJson = await saveRes.json();
+                    if (resJson.success) {
+                      window.location.href = `/?idx=<%= idx %>&success=` + encodeURIComponent(`Audio "${resJson.voice || ''}" trimmed successfully!`);
+                    } else {
+                      alert('⚠️ Trimming error: ' + (resJson.error || 'Failed to save trimmed audio'));
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert('⚠️ Failed to trim audio: ' + err.message);
+                  } finally {
+                    if (trimBtn) {
+                      trimBtn.disabled = false;
+                      trimBtn.textContent = '✂️ Trim & Save File';
+                    }
+                  }
+                }
+
+                function copyFromOrthographic() {
+                  const srcTa = document.getElementById('transcriptionText');
+                  const targetTa = document.getElementById('normalizedText');
+                  const targetCounter = document.getElementById('normCharNum');
+                  if (srcTa && targetTa) {
+                    targetTa.value = srcTa.value;
+                    if (targetCounter) targetCounter.textContent = targetTa.value.length;
+                  }
+                }
+
+                const ta = document.getElementById('transcriptionText');
+                const charNum = document.getElementById('charNum');
+                if (ta && charNum) {
+                  ta.addEventListener('input', () => { charNum.textContent = ta.value.length; });
+                }
+
+                const normTa = document.getElementById('normalizedText');
+                const normCharNum = document.getElementById('normCharNum');
+                if (normTa && normCharNum) {
+                  normTa.addEventListener('input', () => { normCharNum.textContent = normTa.value.length; });
+                }
+                const saveFormEl = document.getElementById('saveForm');
+                if (saveFormEl) {
+                  saveFormEl.addEventListener('submit', (e) => {
+                    const action = document.getElementById('actionField').value;
+                    if (action === 'verify') {
+                      const orthoVal = (document.getElementById('transcriptionText')?.value || '').trim();
+                      const normVal = (document.getElementById('normalizedText')?.value || '').trim();
+
+                      const missing = [];
+                      if (!orthoVal) missing.push('orthographic_transcription');
+                      if (!normVal) missing.push('normalized_transcription');
+
+                      const metadataSelects = document.querySelectorAll('[form="saveForm"]');
+                      let missingMeta = 0;
+                      metadataSelects.forEach(sel => {
+                        if (!sel.value || !sel.value.trim()) {
+                          missingMeta++;
+                          sel.style.borderColor = '#ef4444';
+                        } else {
+                          sel.style.borderColor = '';
+                        }
+                      });
+
+                      if (missingMeta > 0) {
+                        missing.push(`Audio Metadata (${missingMeta} field${missingMeta > 1 ? 's' : ''} missing)`);
+                      }
+
+                      if (missing.length > 0) {
+                        e.preventDefault();
+                        alert('⚠️ Cannot mark as verified!\n\nThe following section(s) must be filled out:\n- ' + missing.join('\n- '));
+                        return false;
+                      }
+                    }
+                  });
+                }
+
+                document.addEventListener('keydown', (e) => {
+                  const inTextarea = document.activeElement === ta || document.activeElement === normTa;
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('actionField').value = 'verify';
+                    if (saveFormEl && saveFormEl.requestSubmit) {
+                      saveFormEl.requestSubmit();
+                    } else if (saveFormEl) {
+                      saveFormEl.submit();
+                    }
+                  }
+                  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    document.getElementById('actionField').value = 'save';
+                    if (saveFormEl && saveFormEl.requestSubmit) {
+                      saveFormEl.requestSubmit();
+                    } else if (saveFormEl) {
+                      saveFormEl.submit();
+                    }
+                  }
+                  if (e.altKey && e.key === 'ArrowLeft') {
+                    const prev = document.getElementById('prevBtn');
+                    if (prev && prev.href) prev.click();
+                  }
+                  if (e.altKey && e.key === 'ArrowRight') {
+                    const next = document.getElementById('nextBtn');
+                    if (next && next.href) next.click();
+                  }
+                  if (e.key === ' ' && !inTextarea && document.activeElement.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    if (audio) audio.paused ? audio.play() : audio.pause();
+                  }
+                });
+              </script>
+
+              <% } %>
+  </main>
+
+  <footer class="footer-strip">
+    <span>Shruti-Lekhan — Shruti (Listening) + Lekhan (Writing) | Speech Workbench</span>
+    <% if (user) { %>
+      <span>Logged in as <strong>
+          <%= user.username %>
+        </strong> (<%= user.role %>)</span>
+      <% } %>
+  </footer>
+
+  <% if (mode==='upload' ) { %>
+    <script>
+      function labelUpdater(inputId, labelId, defaultHtml) {
+        const input = document.getElementById(inputId);
+        const label = document.getElementById(labelId);
+        if (!input || !label) return;
+        input.addEventListener('change', () => {
+          if (input.files.length > 0) {
+            const names = Array.from(input.files).map(f => f.name).join(', ');
+            label.innerHTML = '<strong style="color:var(--green)">✓ ' + input.files.length + ' file(s) selected</strong><br/><span style="font-size:0.72rem;color:var(--text-muted)">' + (names.length > 60 ? names.slice(0, 60) + '…' : names) + '</span>';
+          } else {
+            label.innerHTML = defaultHtml;
+          }
+        });
+      }
+      labelUpdater('csvFile', 'csvLabel', '<strong>Click to choose</strong> or drag &amp; drop<br/><span>Columns: <code>voice</code>, <code>orthographic_transcription</code>, <code>normalized_transcription</code></span>');
+      labelUpdater('audioFiles', 'audioLabel', '<strong>Click to choose</strong> or drag &amp; drop<br/><span>.wav .mp3 .ogg .m4a .flac — or a single .zip</span>');
+      document.getElementById('uploadForm').addEventListener('submit', function () {
+        const btn = document.getElementById('uploadBtn');
+        btn.textContent = 'Uploading & Processing…';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+      });
+    </script>
+    <% } %>
+
+
+  <script>
+    async function revertAudio(idx) {
+      if (!confirm('Revert this audio clip to its original untrimmed version?')) return;
+      const btn = document.getElementById('revertAudioBtn');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch('/revert-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idx })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✓ ' + (data.message || 'Audio reverted to original version!'));
+          const audioEl = document.getElementById('audioPlayer');
+          if (audioEl) {
+            const curSrc = audioEl.src.split('?')[0];
+            audioEl.src = curSrc + '?t=' + Date.now();
+            audioEl.load();
+          } else {
+            location.reload();
+          }
+        } else {
+          alert('⚠️ ' + (data.error || 'Failed to revert audio'));
+        }
+      } catch (err) {
+        alert('⚠️ Error reverting audio: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function revertRecord(idx) {
+      if (!confirm('Revert this record to its original baseline transcription and audio data?')) return;
+      try {
+        const res = await fetch('/revert-record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idx })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✓ ' + (data.message || 'Record reverted!'));
+          location.reload();
+        } else {
+          alert('⚠️ ' + (data.error || 'Failed to revert record'));
+        }
+      } catch (err) {
+        alert('⚠️ Error reverting record: ' + err.message);
+      }
+    }
+
+    async function revertAllDataset() {
+      if (!confirm('⚠️ WARNING: This will revert the ENTIRE dataset (all records and audio files) back to the original baseline state. All edits and trimming will be rolled back. Continue?')) return;
+      try {
+        const res = await fetch('/revert-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✓ ' + (data.message || 'Entire dataset reverted to baseline!'));
+          location.reload();
+        } else {
+          alert('⚠️ ' + (data.error || 'Failed to revert dataset'));
+        }
+      } catch (err) {
+        alert('⚠️ Error reverting dataset: ' + err.message);
+      }
+    }
+  </script>
+
+</body>
+
+</html>

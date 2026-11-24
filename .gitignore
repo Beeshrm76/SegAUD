@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# SegAUD runtime data
+uploads/*
+!uploads/.gitkeep
+
+# Generated documents
+ML_Audio_Engineering_Monthly_Action_Plan.pdf
+
+# Voice-Transcription-Reviewer runtime data
+Voice-Transcription-Reviewer/node_modules/
+Voice-Transcription-Reviewer/uploads/*
+!Voice-Transcription-Reviewer/uploads/.gitkeep
+Voice-Transcription-Reviewer/originals/*
+!Voice-Transcription-Reviewer/originals/.gitkeep
+Voice-Transcription-Reviewer/edits/*
+!Voice-Transcription-Reviewer/edits/.gitkeep
+Voice-Transcription-Reviewer/data/records.json
+Voice-Transcription-Reviewer/data/records_original.json
+
+# OS files
+Thumbs.db
+.DS_Store

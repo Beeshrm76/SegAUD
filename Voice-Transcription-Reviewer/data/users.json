@@ -1,0 +1,13 @@
+[
+  {
+    "id": "usr_admin",
+    "username": "admin",
+    "salt": "188c42acceca410cc03f3586467f124f",
+    "hash": "eeef7ef63a1f683bc453cc3f2533acd53c8837224c009f9d1dd7354d877cd280c8ec17e3527e2889629f9062b4aa81fe6765ee491a69038a967a94a4c799f870",
+    "role": "admin",
+    "createdAt": "2026-07-23T15:16:43.413Z",
+    "quota": 0,
+    "startIndex": 0,
+    "canTrim": true
+  }
+]
