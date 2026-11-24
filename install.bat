@@ -18,7 +18,7 @@ echo.
 :: -------------------------------------------------------------------------
 :: 1. Check for Python Installation
 :: -------------------------------------------------------------------------
-echo [1/6] Checking for Python installation...
+echo [1/7] Checking for Python installation...
 
 set "PYTHON_CMD="
 
@@ -60,7 +60,7 @@ echo.
 :: -------------------------------------------------------------------------
 :: 2. Setup / Verify Virtual Environment
 :: -------------------------------------------------------------------------
-echo [2/6] Setting up Python virtual environment (venv)...
+echo [2/7] Setting up Python virtual environment (venv)...
 
 if exist "venv\Scripts\python.exe" (
     echo       Virtual environment already exists at .\venv
@@ -80,7 +80,7 @@ echo.
 :: -------------------------------------------------------------------------
 :: 3. Upgrade Pip and Install Dependencies
 :: -------------------------------------------------------------------------
-echo [3/6] Installing machine learning & audio dependencies...
+echo [3/7] Installing machine learning & audio dependencies...
 echo       (PyTorch, Silero VAD, SoundFile, Transformers, HuggingFace Hub)
 echo.
 
@@ -102,18 +102,37 @@ echo       Dependencies verified and up to date!
 echo.
 
 :: -------------------------------------------------------------------------
-:: 4. Verify Output Folders & Assets
+:: 4. Verify / Install Shruti-Lekhan Workbench Dependencies
 :: -------------------------------------------------------------------------
-echo [4/6] Verifying project directories and models...
+echo [4/7] Checking Shruti-Lekhan review workbench packages...
+where npm >nul 2>&1
+if !errorlevel! equ 0 (
+    if exist "Voice-Transcription-Reviewer\package.json" (
+        echo       Installing/verifying Shruti-Lekhan local packages...
+        pushd "Voice-Transcription-Reviewer"
+        call npm install --silent
+        popd
+        echo       Shruti-Lekhan dependencies verified [OK].
+    )
+) else (
+    echo       [NOTE] Node.js not detected locally. Shruti-Lekhan is accessible via cloud:
+    echo              https://shrutilekhan.vercel.app/
+)
+echo.
+
+:: -------------------------------------------------------------------------
+:: 5. Verify Output Folders & Assets
+:: -------------------------------------------------------------------------
+echo [5/7] Verifying project directories and models...
 if not exist "segments" mkdir segments
 if not exist "uploads" mkdir uploads
 echo       Directories ready.
 echo.
 
 :: -------------------------------------------------------------------------
-:: 5. Compile / Verify Standalone Launcher Executable (SegAUD.exe)
+:: 6. Compile / Verify Standalone Launcher Executable (SegAUD.exe)
 :: -------------------------------------------------------------------------
-echo [5/6] Verifying SegAUD.exe desktop application launcher...
+echo [6/7] Verifying SegAUD.exe desktop application launcher...
 
 where gcc >nul 2>&1
 if !errorlevel! equ 0 (
@@ -135,9 +154,9 @@ if exist "SegAUD.exe" (
 echo.
 
 :: -------------------------------------------------------------------------
-:: 6. Create Windows Desktop and Start Menu Shortcuts
+:: 7. Create Windows Desktop and Start Menu Shortcuts
 :: -------------------------------------------------------------------------
-echo [6/6] Creating Desktop and Start Menu shortcuts...
+echo [7/7] Creating Desktop and Start Menu shortcuts...
 
 set "TARGET_EXE=%ROOT_DIR%\SegAUD.exe"
 if not exist "%TARGET_EXE%" set "TARGET_EXE=%ROOT_DIR%\run_segaud.bat"
