@@ -28,20 +28,20 @@ app.use(session({
 
 // ── Persistence Setup ─────────────────────────────────────
 const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+try { if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true }); } catch (e) {}
 
 const usersFilePath = path.join(dataDir, 'users.json');
 const recordsFilePath = path.join(dataDir, 'records.json');
 const originalRecordsPath = path.join(dataDir, 'records_original.json');
 
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+try { if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true }); } catch (e) {}
 
 const originalsDir = path.join(__dirname, 'originals');
-if (!fs.existsSync(originalsDir)) fs.mkdirSync(originalsDir, { recursive: true });
+try { if (!fs.existsSync(originalsDir)) fs.mkdirSync(originalsDir, { recursive: true }); } catch (e) {}
 
 const editsDir = path.join(__dirname, 'edits');
-if (!fs.existsSync(editsDir)) fs.mkdirSync(editsDir, { recursive: true });
+try { if (!fs.existsSync(editsDir)) fs.mkdirSync(editsDir, { recursive: true }); } catch (e) {}
 const editsLogPath = path.join(editsDir, 'edits_log.json');
 
 // Password hashing helper
@@ -99,7 +99,11 @@ function loadUsers() {
 }
 
 function saveUsers(users) {
-  fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+  try {
+    fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+  } catch (e) {
+    console.warn('Warning: saveUsers disk write failed (running in read-only environment):', e.message);
+  }
 }
 
 let users = loadUsers();
@@ -152,7 +156,11 @@ function loadRecords() {
 }
 
 function saveRecords(recs) {
-  fs.writeFileSync(recordsFilePath, JSON.stringify(recs, null, 2));
+  try {
+    fs.writeFileSync(recordsFilePath, JSON.stringify(recs, null, 2));
+  } catch (e) {
+    console.warn('Warning: saveRecords disk write failed (running in read-only environment):', e.message);
+  }
 }
 
 function loadOriginalRecords() {
@@ -165,7 +173,11 @@ function loadOriginalRecords() {
 }
 
 function saveOriginalRecords(recs) {
-  fs.writeFileSync(originalRecordsPath, JSON.stringify(recs, null, 2));
+  try {
+    fs.writeFileSync(originalRecordsPath, JSON.stringify(recs, null, 2));
+  } catch (e) {
+    console.warn('Warning: saveOriginalRecords disk write failed (running in read-only environment):', e.message);
+  }
 }
 
 let records = loadRecords();
@@ -1218,6 +1230,10 @@ app.post('/api/import-segaud', express.json(), async (req, res) => {
 });
 
 // ── Start ──────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅  Shruti-Lekhan running at http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`✅  Shruti-Lekhan running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
