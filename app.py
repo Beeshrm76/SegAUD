@@ -160,11 +160,26 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        # 1. API Status
-        if path == "/api/status":
+        # 1. API Status & Hardware Telemetry
+        if path in ["/api/status", "/api/hardware_info"]:
             info = asr.get_active_model_info()
             info["status"] = "ok"
             info["engine"] = "Python Native Backend"
+            cuda_avail = torch.cuda.is_available()
+            info["cuda_available"] = cuda_avail
+            info["device_name"] = torch.cuda.get_device_name(0) if cuda_avail else "CPU (x86_64)"
+            info["device_count"] = torch.cuda.device_count() if cuda_avail else 0
+            if cuda_avail:
+                try:
+                    info["vram_gb"] = round(torch.cuda.get_device_properties(0).total_memory / (1024**3), 2)
+                except Exception:
+                    info["vram_gb"] = 0.0
+            else:
+                info["vram_gb"] = 0.0
+            info["cpu_count"] = os.cpu_count() or 4
+            info["asr_threads"] = getattr(asr, "ASR_THREADS", 4)
+            info["vad_threads"] = getattr(vad, "VAD_THREADS", 1)
+            info["active_device"] = getattr(asr, "DEVICE", "cpu")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
@@ -301,6 +316,30 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        if path == "/api/set_hardware":
+            try:
+                body = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode("utf-8")
+                data = json.loads(body)
+                active_dev = asr.DEVICE
+                if "device" in data:
+                    active_dev = asr.set_device(data["device"])
+                if "asr_threads" in data:
+                    asr.set_threads(int(data["asr_threads"]))
+                if "vad_threads" in data:
+                    vad.set_threads(int(data["vad_threads"]))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "device": active_dev,
+                    "asr_threads": asr.ASR_THREADS,
+                    "vad_threads": vad.VAD_THREADS
+                }).encode("utf-8"))
+            except Exception as e:
+                self.send_error(500, str(e))
+            return
+
         if path == "/api/set_token":
             try:
                 length = int(self.headers.get("Content-Length", 0))
@@ -342,6 +381,9 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 domain = fields.get("domain", "").strip()
                 hf_token = fields.get("hf_token", "").strip()
                 selected_model = fields.get("model", "").strip()
+                device_val = fields.get("device", "").strip()
+                asr_threads_val = fields.get("asr_threads", "").strip()
+                vad_threads_val = fields.get("vad_threads", "").strip()
                 run_asr_val = fields.get("run_asr", "true").strip().lower()
                 should_run_asr = run_asr_val not in ["false", "0", "no"]
 
@@ -359,7 +401,10 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                 with open(temp_file, "wb") as f:
                     f.write(audio_file["data"])
 
-                print(f"[SegAUD Server] Processing audio: {filename} (Domain: {domain}, Model: {selected_model or 'Default'}, Run ASR: {should_run_asr}, Stem: {custom_name})")
+                parsed_asr_threads = int(asr_threads_val) if asr_threads_val.isdigit() else None
+                parsed_vad_threads = int(vad_threads_val) if vad_threads_val.isdigit() else None
+
+                print(f"[SegAUD Server] Processing audio: {filename} (Domain: {domain}, Model: {selected_model or 'Default'}, Device: {device_val or 'auto'}, Threads: VAD={parsed_vad_threads or 1}/ASR={parsed_asr_threads or 4}, Run ASR: {should_run_asr}, Stem: {custom_name})")
 
                 # Initialize live pipeline progress
                 with _status_lock:
@@ -383,7 +428,10 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
                     token=hf_token or None,
                     asr_model=selected_model or None,
                     run_asr=should_run_asr,
-                    progress_callback=update_pipeline_progress
+                    progress_callback=update_pipeline_progress,
+                    device=device_val or None,
+                    asr_threads=parsed_asr_threads,
+                    vad_threads=parsed_vad_threads
                 )
 
                 with _status_lock:

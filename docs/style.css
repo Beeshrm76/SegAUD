@@ -2870,3 +2870,124 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   background: var(--bg-surface, #1e1e2e);
   color: var(--text-primary, #abb2bf);
 }
+
+/* Hardware & GPU Processing Panel */
+.hardware-panel-group,
+.threads-panel-group {
+  margin-top: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s ease;
+}
+.hardware-panel-group:hover,
+.threads-panel-group:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.hardware-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.hw-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  display: inline-block;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+.hw-status-dot.cuda-active {
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.hw-control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+.hw-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hw-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hw-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.hw-val-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.hw-select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--bg-surface, #1e1e2e);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  outline: none;
+  transition: all 0.2s;
+}
+.hw-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.hw-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--accent);
+  margin: 6px 0;
+}
+
+.threads-preset-buttons {
+  display: flex;
+  gap: 6px;
+}
+.threads-preset-buttons .btn {
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+.threads-preset-buttons .btn.active {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
+}

@@ -31,11 +31,21 @@ def process_audio(
     token: str = None,
     asr_model: str = None,
     run_asr: bool = True,
-    progress_callback = None
+    progress_callback = None,
+    device: str = None,
+    asr_threads: int = None,
+    vad_threads: int = None
 ):
     """Pipeline: Phase 1 (VAD) -> Phase 2 (ASR) -> Phase 3 (Speaker Annotation) -> CSVs."""
     if not domain or not domain.strip():
         raise ValueError("Domain is compulsory.")
+
+    if device:
+        asr.set_device(device)
+    if asr_threads:
+        asr.set_threads(asr_threads)
+    if vad_threads:
+        vad.set_threads(vad_threads)
 
     source = Path(audio_path)
     stem = audio_name.strip() if (audio_name and audio_name.strip()) else source.stem

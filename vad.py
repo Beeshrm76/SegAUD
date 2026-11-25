@@ -14,6 +14,17 @@ VAD_THREADS = 1
 vad_model = load_silero_vad()
 
 
+def set_threads(num_threads: int) -> int:
+    """Dynamically set VAD execution threads."""
+    global VAD_THREADS
+    try:
+        val = int(num_threads)
+        VAD_THREADS = min(16, max(1, val))
+    except Exception:
+        pass
+    return VAD_THREADS
+
+
 def _load_wav(audio_path: str) -> torch.Tensor:
     """Read any audio format (M4A, MP3, MP4, WAV, FLAC, OGG, AAC) as mono 16 kHz."""
     # 1. Try PyAV first: decodes all formats (M4A, AAC, MP3, MP4, etc.) reliably without external dependencies

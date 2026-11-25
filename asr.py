@@ -35,19 +35,52 @@ _current_active_info = {
 }
 
 
+def set_device(device_name: str) -> str:
+    """Dynamically set the compute device ('cuda', 'cpu', 'auto')."""
+    global DEVICE
+    clean = (device_name or "auto").lower().strip()
+    if clean == "cuda":
+        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    elif clean == "cpu":
+        DEVICE = "cpu"
+    else:
+        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    return DEVICE
+
+
+def set_threads(num_threads: int) -> int:
+    """Dynamically set PyTorch CPU worker threads."""
+    global ASR_THREADS
+    try:
+        val = int(num_threads)
+        ASR_THREADS = min(32, max(1, val))
+        torch.set_num_threads(ASR_THREADS)
+    except Exception:
+        pass
+    return ASR_THREADS
+
+
 def clean_transcript(text: str) -> str:
-    """Sanitize transcript, collapse repetitive loops and strip silence noise."""
+    """Sanitize transcript, collapse repetitive loops, and ensure Devanagari full stop (।) at the end."""
     if not text:
         return ""
     t = text.strip()
     # Remove repetitive punctuation like " . . . . . "
-    if re.match(r'^[ ._,\-;:!?]+$', t):
+    if re.match(r'^[ ._,\-;:!?।]+$', t):
         return ""
     # Collapse repetitive word loops (e.g. "word word word" or "दिदिदिदि...")
     t = re.sub(r'([^\s]+(?:\s+[^\s]+){0,3}?)\s*(?:(?:\1|\b\1\b)[.,;!?\- ]*){2,}', r'\1', t, flags=re.IGNORECASE)
     # Collapse character repeating loops > 3 times (e.g. "दिदिदिदिदिदि...")
     t = re.sub(r'(..+?)\1{3,}', r'\1\1', t)
     t = re.sub(r'\s{2,}', ' ', t).strip()
+    if not t:
+        return ""
+    # Strip any trailing western punctuation (.,!?-) or whitespace
+    t = re.sub(r'[\s.,;!?\-]+$', '', t).strip()
+    # Ensure Devanagari full stop (।) at the end of every completed ASR text
+    if t and not t.endswith('।'):
+        t = t + ' ।'
+    return t
     return t
 
 

@@ -429,6 +429,98 @@ function initProjectGenerator() {
     maxSpeech: document.getElementById('param-max-speech'),
   };
 
+  // Hardware & Multi-Threading inputs
+  const hwDeviceSelect = document.getElementById('hw-device-select');
+  const hwPrecisionSelect = document.getElementById('hw-precision-select');
+  const asrThreadsSlider = document.getElementById('param-asr-threads');
+  const vadThreadsSlider = document.getElementById('param-vad-threads');
+  const valAsrThreadsBadge = document.getElementById('val-asr-threads');
+  const valVadThreadsBadge = document.getElementById('val-vad-threads');
+  const hwDeviceBadge = document.getElementById('hw-device-badge');
+
+  const threadPresetBalanced = document.getElementById('thread-preset-balanced');
+  const threadPresetThroughput = document.getElementById('thread-preset-throughput');
+  const threadPresetPowersave = document.getElementById('thread-preset-powersave');
+
+  function updateThreadValues() {
+    const asrVal = asrThreadsSlider?.value || '4';
+    const vadVal = vadThreadsSlider?.value || '1';
+    if (valAsrThreadsBadge) valAsrThreadsBadge.textContent = `${asrVal} Threads`;
+    if (valVadThreadsBadge) valVadThreadsBadge.textContent = `${vadVal} Thread${vadVal == 1 ? '' : 's'}`;
+
+    const perfVad = document.getElementById('metric-perf-vad-threads');
+    const perfAsr = document.getElementById('metric-perf-asr-threads');
+    const perfDev = document.getElementById('metric-perf-device');
+    if (perfVad) perfVad.textContent = `${vadVal} Thread${vadVal == 1 ? '' : 's'}`;
+    if (perfAsr) perfAsr.textContent = `${asrVal} Threads`;
+    if (perfDev && hwDeviceSelect) perfDev.textContent = hwDeviceSelect.value.toUpperCase();
+    if (hwDeviceBadge && hwDeviceSelect) hwDeviceBadge.textContent = `Mode: ${hwDeviceSelect.value.toUpperCase()}`;
+  }
+
+  if (asrThreadsSlider) {
+    asrThreadsSlider.addEventListener('input', () => {
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  if (vadThreadsSlider) {
+    vadThreadsSlider.addEventListener('input', () => {
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  if (hwDeviceSelect) {
+    hwDeviceSelect.addEventListener('change', () => {
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  if (hwPrecisionSelect) {
+    hwPrecisionSelect.addEventListener('change', () => {
+      updatePreview();
+    });
+  }
+
+  function setActivePresetBtn(btn) {
+    [threadPresetBalanced, threadPresetThroughput, threadPresetPowersave].forEach(b => b?.classList.remove('active'));
+    btn?.classList.add('active');
+  }
+
+  if (threadPresetBalanced) {
+    threadPresetBalanced.addEventListener('click', () => {
+      if (vadThreadsSlider) vadThreadsSlider.value = 1;
+      if (asrThreadsSlider) asrThreadsSlider.value = 4;
+      setActivePresetBtn(threadPresetBalanced);
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  if (threadPresetThroughput) {
+    threadPresetThroughput.addEventListener('click', () => {
+      if (vadThreadsSlider) vadThreadsSlider.value = 2;
+      if (asrThreadsSlider) asrThreadsSlider.value = 8;
+      setActivePresetBtn(threadPresetThroughput);
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  if (threadPresetPowersave) {
+    threadPresetPowersave.addEventListener('click', () => {
+      if (vadThreadsSlider) vadThreadsSlider.value = 1;
+      if (asrThreadsSlider) asrThreadsSlider.value = 2;
+      setActivePresetBtn(threadPresetPowersave);
+      updateThreadValues();
+      updatePreview();
+    });
+  }
+
+  updateThreadValues();
+
   let currentRecommended = 'awadhi_transcription';
   let userTypedCustom = false;
 
@@ -451,6 +543,11 @@ function initProjectGenerator() {
     const mx = paramInputs.maxSpeech?.value || '20';
 
     const engine = getAsrEngine();
+    const devVal = hwDeviceSelect?.value || 'auto';
+    const precVal = hwPrecisionSelect?.value || 'fp32';
+    const asrThrVal = asrThreadsSlider?.value || '4';
+    const vadThrVal = vadThreadsSlider?.value || '1';
+
     const diarLine = toggleDiar?.querySelector('input')?.checked
       ? `\n<span class="var">DIARIZATION</span>    = <span class="str">"pyannote.audio"</span> <span class="cmt"># speaker diarization</span>`
       : '';
@@ -480,11 +577,15 @@ function initProjectGenerator() {
 
 ${vadSection}
 
+<span class="cmt"># ── Hardware & Compute Settings ──</span>
+<span class="var">DEVICE</span>          = <span class="str">"${devVal}"</span>  <span class="cmt"># ${devVal === 'cuda' ? 'NVIDIA GPU Acceleration' : (devVal === 'cpu' ? 'CPU-Only Mode' : 'auto (CUDA if available)')}</span>
+<span class="var">PRECISION</span>       = <span class="str">"${precVal}"</span>  <span class="cmt"># inference precision</span>
+<span class="var">ASR_THREADS</span>     = <span class="num">${asrThrVal}</span>       <span class="cmt"># parallel ASR neural inference threads</span>
+<span class="var">VAD_THREADS</span>     = <span class="num">${vadThrVal}</span>       <span class="cmt"># deterministic VAD segmentation threads</span>
+
 <span class="cmt"># ── ASR & Diarization Settings ──</span>
 <span class="var">ASR_ENGINE</span>      = <span class="str">${engine}</span>
-<span class="var">ASR_MODEL</span>       = <span class="str">"openai/whisper-base"</span>
-<span class="var">ASR_THREADS</span>     = <span class="num">4</span>
-<span class="var">DEVICE</span>          = <span class="str">"auto"</span>  <span class="cmt"># cuda if available</span>${diarLine}
+<span class="var">ASR_MODEL</span>       = <span class="str">"openai/whisper-base"</span>${diarLine}
 
 <span class="cmt"># ── Output ──</span>
 <span class="var">OUTPUT_DIR</span>      = <span class="str">"segments"</span>
@@ -1063,6 +1164,18 @@ function initAudioWorkspace() {
             backendBaseUrl = base;
             window.__isPythonBackend = true;
             window.__backendBaseUrl = base;
+
+            const hwText = document.getElementById('hw-status-text');
+            const hwDot = document.getElementById('hw-status-dot');
+            if (hwText && hwDot) {
+              if (data.cuda_available) {
+                hwText.textContent = `⚡ CUDA GPU: ${data.device_name} (${data.vram_gb} GB VRAM)`;
+                hwDot.classList.add('cuda-active');
+              } else {
+                hwText.textContent = `💻 CPU Engine (${data.cpu_count || 4} Logical Cores)`;
+                hwDot.classList.remove('cuda-active');
+              }
+            }
             return;
           }
         }
@@ -1072,6 +1185,12 @@ function initAudioWorkspace() {
     }
     isPythonBackend = false;
     window.__isPythonBackend = false;
+    const hwText = document.getElementById('hw-status-text');
+    const hwDot = document.getElementById('hw-status-dot');
+    if (hwText && hwDot) {
+      hwText.textContent = '🌐 Web Audio Engine (Browser Mode)';
+      hwDot.classList.remove('cuda-active');
+    }
   }
   detectBackend();
 
@@ -1498,6 +1617,12 @@ function initAudioWorkspace() {
           return '';
         }
       }
+    }
+
+    // Ensure Devanagari full stop (।) at the end of every completed ASR text
+    text = text.replace(/[\s.,;!?\-]+$/, '').trim();
+    if (text && !text.endsWith('।')) {
+      text += ' ।';
     }
 
     return text;
@@ -1933,6 +2058,13 @@ function initAudioWorkspace() {
         formData.append('model', selectedModel);
         formData.append('run_asr', shouldRunAsr ? 'true' : 'false');
         if (tokenToSend) formData.append('hf_token', tokenToSend);
+
+        const devSelect = document.getElementById('hw-device-select');
+        const asrThrInput = document.getElementById('param-asr-threads');
+        const vadThrInput = document.getElementById('param-vad-threads');
+        if (devSelect?.value) formData.append('device', devSelect.value);
+        if (asrThrInput?.value) formData.append('asr_threads', asrThrInput.value);
+        if (vadThrInput?.value) formData.append('vad_threads', vadThrInput.value);
 
         resetPipelineProgress();
         setPipelineProgress(15, '01/03: Sending audio to local Python PC pipeline...', 'Phase 1/3');
