@@ -10,6 +10,17 @@ echo ================================================================
 echo.
 echo Starting SegAUD PC Desktop Application...
 
+if not exist ".installed" (
+    echo.
+    echo ================================================================
+    echo  [!] SegAUD is currently not installed on this PC.
+    echo      Please run Install_SegAUD.exe to set up SegAUD first.
+    echo ================================================================
+    echo.
+    pause
+    exit /b 1
+)
+
 if exist "venv\Scripts\python.exe" (
     venv\Scripts\python.exe app.py
 ) else (

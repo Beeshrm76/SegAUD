@@ -299,72 +299,6 @@
             </div>
           </div>
 
-          <!-- Hardware Acceleration & GPU Processing Panel -->
-          <div class="form-group hardware-panel-group">
-            <div class="param-header-flex">
-              <label class="param-main-label">⚡ Hardware &amp; GPU Processing</label>
-              <div class="hardware-status-indicator" id="hw-status-indicator">
-                <span class="hw-status-dot" id="hw-status-dot"></span>
-                <span class="hw-status-text" id="hw-status-text">Detecting compute hardware...</span>
-              </div>
-            </div>
-            <p class="param-hint-text">Configure PyTorch acceleration engine, GPU allocation, and inference precision mode.</p>
-            
-            <div class="hw-control-grid">
-              <div class="hw-item">
-                <label for="hw-device-select" class="hw-label">Compute Device</label>
-                <select id="hw-device-select" class="form-select hw-select">
-                  <option value="auto">Auto-Detect (CUDA GPU / CPU fallback)</option>
-                  <option value="cuda">Force NVIDIA CUDA (GPU Acceleration)</option>
-                  <option value="cpu">Force CPU Only (Power-Efficient / Compatible)</option>
-                </select>
-                <span class="param-badge" id="hw-device-badge">Mode: Auto</span>
-              </div>
-
-              <div class="hw-item">
-                <label for="hw-precision-select" class="hw-label">Inference Precision</label>
-                <select id="hw-precision-select" class="form-select hw-select">
-                  <option value="fp16">FP16 Half-Precision (Faster on CUDA)</option>
-                  <option value="fp32" selected>FP32 Single-Precision (High Accuracy)</option>
-                </select>
-                <span class="param-badge">Precision: FP32 / FP16</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Multi-Threading Edit Panel -->
-          <div class="form-group threads-panel-group">
-            <div class="param-header-flex">
-              <label class="param-main-label">🧵 Multi-Threading &amp; CPU Optimization</label>
-              <div class="threads-preset-buttons">
-                <button type="button" class="btn btn-xs btn-ghost active" id="thread-preset-balanced" title="1 VAD thread, 4 ASR threads">Balanced</button>
-                <button type="button" class="btn btn-xs btn-ghost" id="thread-preset-throughput" title="2 VAD threads, 8 ASR threads">High Throughput</button>
-                <button type="button" class="btn btn-xs btn-ghost" id="thread-preset-powersave" title="1 VAD thread, 2 ASR threads">Low Resource</button>
-              </div>
-            </div>
-            <p class="param-hint-text">Adjust parallel CPU execution threads for Silero VAD and neural ASR transcription.</p>
-            
-            <div class="hw-control-grid">
-              <div class="hw-item">
-                <div class="hw-label-row">
-                  <label for="param-asr-threads" class="hw-label">ASR Inference Threads</label>
-                  <span class="hw-val-badge" id="val-asr-threads">4 Threads</span>
-                </div>
-                <input type="range" id="param-asr-threads" min="1" max="16" value="4" step="1" class="hw-slider" />
-                <span class="param-badge">Default: 4 | Range: 1 - 16</span>
-              </div>
-
-              <div class="hw-item">
-                <div class="hw-label-row">
-                  <label for="param-vad-threads" class="hw-label">VAD Processing Threads</label>
-                  <span class="hw-val-badge" id="val-vad-threads">1 Thread</span>
-                </div>
-                <input type="range" id="param-vad-threads" min="1" max="8" value="1" step="1" class="hw-slider" />
-                <span class="param-badge">Default: 1 | Range: 1 - 8</span>
-              </div>
-            </div>
-          </div>
-
           <button class="btn btn-primary btn-full" id="generate-btn">⚡ Generate Project</button>
         </div>
 
@@ -487,6 +421,72 @@
                 <span class="toggle-text">Run ASR Speech Transcription (Devanagari)</span>
               </label>
               <span class="asr-toggle-hint">Uncheck for instant VAD segmentation without transcription.</span>
+            </div>
+
+            <!-- Hardware Acceleration & GPU Processing Panel -->
+            <div class="form-group hardware-panel-group">
+              <div class="param-header-flex">
+                <label class="param-main-label">⚡ Hardware &amp; GPU Processing</label>
+                <div class="hardware-status-indicator" id="hw-status-indicator">
+                  <span class="hw-status-dot" id="hw-status-dot"></span>
+                  <span class="hw-status-text" id="hw-status-text">Detecting compute hardware...</span>
+                </div>
+              </div>
+              <p class="param-hint-text">Configure PyTorch acceleration engine, GPU allocation, and inference precision mode.</p>
+              
+              <div class="hw-control-grid">
+                <div class="hw-item">
+                  <label for="hw-device-select" class="hw-label">Compute Device</label>
+                  <select id="hw-device-select" class="form-select hw-select">
+                    <option value="auto">Auto-Detect (CUDA GPU / CPU fallback)</option>
+                    <option value="cuda">Force CUDA GPU (Acceleration)</option>
+                    <option value="cpu">Force CPU Only (Power-Efficient / Compatible)</option>
+                  </select>
+                  <span class="param-badge" id="hw-device-badge">Mode: Auto</span>
+                </div>
+
+                <div class="hw-item">
+                  <label for="hw-precision-select" class="hw-label">Inference Precision</label>
+                  <select id="hw-precision-select" class="form-select hw-select">
+                    <option value="fp16">FP16 Half-Precision (Faster on CUDA)</option>
+                    <option value="fp32" selected>FP32 Single-Precision (High Accuracy)</option>
+                  </select>
+                  <span class="param-badge">Precision: FP32 / FP16</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Multi-Threading Edit Panel -->
+            <div class="form-group threads-panel-group">
+              <div class="param-header-flex">
+                <label class="param-main-label">🧵 Multi-Threading &amp; CPU Optimization</label>
+                <div class="threads-preset-buttons">
+                  <button type="button" class="btn btn-xs btn-ghost active" id="thread-preset-balanced" title="1 VAD thread, 4 ASR threads">Balanced</button>
+                  <button type="button" class="btn btn-xs btn-ghost" id="thread-preset-throughput" title="2 VAD threads, 8 ASR threads">High Throughput</button>
+                  <button type="button" class="btn btn-xs btn-ghost" id="thread-preset-powersave" title="1 VAD thread, 2 ASR threads">Low Resource</button>
+                </div>
+              </div>
+              <p class="param-hint-text">Adjust parallel CPU execution threads for Silero VAD and neural ASR transcription.</p>
+              
+              <div class="hw-control-grid">
+                <div class="hw-item">
+                  <div class="hw-label-row">
+                    <label for="param-asr-threads" class="hw-label">ASR Inference Threads</label>
+                    <span class="hw-val-badge" id="val-asr-threads">4 Threads</span>
+                  </div>
+                  <input type="range" id="param-asr-threads" min="1" max="16" value="4" step="1" class="hw-slider" />
+                  <span class="param-badge">Default: 4 | Range: 1 - 16</span>
+                </div>
+
+                <div class="hw-item">
+                  <div class="hw-label-row">
+                    <label for="param-vad-threads" class="hw-label">VAD Processing Threads</label>
+                    <span class="hw-val-badge" id="val-vad-threads">1 Thread</span>
+                  </div>
+                  <input type="range" id="param-vad-threads" min="1" max="8" value="1" step="1" class="hw-slider" />
+                  <span class="param-badge">Default: 1 | Range: 1 - 8</span>
+                </div>
+              </div>
             </div>
 
             <button type="button" class="btn btn-primary btn-run-pipeline" id="run-pipeline-btn">

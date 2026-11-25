@@ -7,6 +7,8 @@ venv/
 # SegAUD runtime data
 uploads/*
 !uploads/.gitkeep
+.installed
+.uninstalled
 
 # Generated documents
 ML_Audio_Engineering_Monthly_Action_Plan.pdf

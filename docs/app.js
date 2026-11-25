@@ -578,7 +578,7 @@ function initProjectGenerator() {
 ${vadSection}
 
 <span class="cmt"># ── Hardware & Compute Settings ──</span>
-<span class="var">DEVICE</span>          = <span class="str">"${devVal}"</span>  <span class="cmt"># ${devVal === 'cuda' ? 'NVIDIA GPU Acceleration' : (devVal === 'cpu' ? 'CPU-Only Mode' : 'auto (CUDA if available)')}</span>
+<span class="var">DEVICE</span>          = <span class="str">"${devVal}"</span>  <span class="cmt"># ${devVal === 'cuda' ? 'CUDA GPU Acceleration' : (devVal === 'cpu' ? 'CPU-Only Mode' : 'auto (CUDA if available)')}</span>
 <span class="var">PRECISION</span>       = <span class="str">"${precVal}"</span>  <span class="cmt"># inference precision</span>
 <span class="var">ASR_THREADS</span>     = <span class="num">${asrThrVal}</span>       <span class="cmt"># parallel ASR neural inference threads</span>
 <span class="var">VAD_THREADS</span>     = <span class="num">${vadThrVal}</span>       <span class="cmt"># deterministic VAD segmentation threads</span>

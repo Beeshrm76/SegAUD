@@ -35,6 +35,13 @@ static HFONT g_hFontMono = NULL;
 static BOOL g_isInstalling = FALSE;
 static BOOL g_isFinished = FALSE;
 
+static void SafeSetText(HWND hWnd, const wchar_t* text) {
+    if (!hWnd || !text) return;
+    SetWindowTextW(hWnd, text);
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
+}
+
 void AppendLog(const wchar_t* text) {
     if (!g_hLogBox) return;
     int len = GetWindowTextLengthW(g_hLogBox);
@@ -42,6 +49,8 @@ void AppendLog(const wchar_t* text) {
     SendMessageW(g_hLogBox, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageW(g_hLogBox, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
     SendMessageW(g_hLogBox, WM_VSCROLL, SB_BOTTOM, 0);
+    InvalidateRect(g_hLogBox, NULL, FALSE);
+    UpdateWindow(g_hLogBox);
 }
 
 void SetProgress(int percent, const wchar_t* stepMsg, const wchar_t* detailMsg) {
@@ -49,10 +58,10 @@ void SetProgress(int percent, const wchar_t* stepMsg, const wchar_t* detailMsg) 
         SendMessageW(g_hProgress, PBM_SETPOS, (WPARAM)percent, 0);
     }
     if (g_hLblStep && stepMsg) {
-        SetWindowTextW(g_hLblStep, stepMsg);
+        SafeSetText(g_hLblStep, stepMsg);
     }
     if (g_hLblStatus && detailMsg) {
-        SetWindowTextW(g_hLblStatus, detailMsg);
+        SafeSetText(g_hLblStatus, detailMsg);
     }
     if (detailMsg) {
         AppendLog(detailMsg);
@@ -154,13 +163,20 @@ unsigned __stdcall InstallThread(void* param) {
     CreateDirectoryW(L"uploads", NULL);
     AppendLog(L"[✓] Application directories initialized.");
 
-    SetProgress(95, L"Step 6 of 6: Creating Desktop & Start Menu shortcuts...", L"Creating application shortcuts on Desktop and Start Menu...");
+    SetProgress(95, L"Step 6 of 6: Integrating with Desktop and Start Menu...", L"Adding application to Desktop and Start Menu...");
     Sleep(400);
 
     // 6. Create shortcuts
     RunSilentCmd(L"powershell -NoProfile -ExecutionPolicy Bypass -File create_shortcuts.ps1");
-    AppendLog(L"[✓] Windows Desktop shortcut created: SegAUD.lnk");
-    AppendLog(L"[✓] Start Menu shortcut created: SegAUD.lnk");
+    AppendLog(L"[✓] Windows Desktop entry registered.");
+    AppendLog(L"[✓] Start Menu entry registered.");
+
+    // Write installation marker
+    DeleteFileW(L".uninstalled");
+    HANDLE hInst = CreateFileW(L".installed", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hInst != INVALID_HANDLE_VALUE) {
+        CloseHandle(hInst);
+    }
 
     SetProgress(100, L"Setup Complete! SegAUD is ready to use.", L"Installation finished successfully with zero errors.");
 
@@ -168,7 +184,7 @@ unsigned __stdcall InstallThread(void* param) {
     g_isFinished = TRUE;
 
     EnableWindow(g_hBtnInstall, TRUE);
-    SetWindowTextW(g_hBtnInstall, L"Finish & Launch");
+    SetWindowTextW(g_hBtnInstall, L"Finish and Launch");
     SetWindowTextW(g_hBtnCancel, L"Close");
     EnableWindow(g_hBtnCancel, TRUE);
 
@@ -195,12 +211,12 @@ LRESULT CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         // Title
         HWND hTitle = CreateWindowExW(0, L"STATIC", L"SegAUD Setup Wizard",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 20, 500, 26, hwnd, NULL, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 20, 500, 26, hwnd, NULL, NULL, NULL);
         SendMessageW(hTitle, WM_SETFONT, (WPARAM)g_hFontTitle, TRUE);
 
         // Subtitle
         HWND hSub = CreateWindowExW(0, L"STATIC", L"Audio Segmentation, Diarization & Transcription Platform",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 48, 500, 20, hwnd, NULL, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 48, 500, 20, hwnd, NULL, NULL, NULL);
         SendMessageW(hSub, WM_SETFONT, (WPARAM)g_hFontBody, TRUE);
 
         // Separator line
@@ -209,12 +225,12 @@ LRESULT CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         // Step Label
         g_hLblStep = CreateWindowExW(0, L"STATIC", L"Ready to install SegAUD to your PC",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 88, 510, 22, hwnd, (HMENU)IDD_LBL_STEP, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 88, 510, 20, hwnd, (HMENU)IDD_LBL_STEP, NULL, NULL);
         SendMessageW(g_hLblStep, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
         // Status Label
         g_hLblStatus = CreateWindowExW(0, L"STATIC", L"Click 'Install SegAUD' to set up the local AI environment.",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 110, 510, 20, hwnd, (HMENU)IDD_LBL_STATUS, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 112, 510, 20, hwnd, (HMENU)IDD_LBL_STATUS, NULL, NULL);
         SendMessageW(g_hLblStatus, WM_SETFONT, (WPARAM)g_hFontBody, TRUE);
 
         // Progress Bar
@@ -285,11 +301,19 @@ LRESULT CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_CTLCOLOREDIT:
     case WM_CTLCOLORSTATIC: {
-        HDC hdcStatic = (HDC)wParam;
-        SetTextColor(hdcStatic, RGB(17, 24, 39));
-        SetBkMode(hdcStatic, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
+        HDC hdc = (HDC)wParam;
+        HWND hwndCtl = (HWND)lParam;
+        if (hwndCtl == g_hLogBox) {
+            SetTextColor(hdc, RGB(20, 24, 35));
+            SetBkColor(hdc, RGB(255, 255, 255));
+            return (LRESULT)GetStockObject(WHITE_BRUSH);
+        }
+        SetTextColor(hdc, RGB(17, 24, 39));
+        SetBkColor(hdc, GetSysColor(COLOR_BTNFACE));
+        SetBkMode(hdc, OPAQUE);
+        return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
     }
 
     case WM_CLOSE:

@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <process.h>
@@ -36,6 +38,13 @@ static HFONT g_hFontMono = NULL;
 static BOOL g_isUninstalling = FALSE;
 static BOOL g_isUnFinished = FALSE;
 
+static void SafeSetText(HWND hWnd, const wchar_t* text) {
+    if (!hWnd || !text) return;
+    SetWindowTextW(hWnd, text);
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
+}
+
 void AppendUnLog(const wchar_t* text) {
     if (!g_hUnLogBox) return;
     int len = GetWindowTextLengthW(g_hUnLogBox);
@@ -43,6 +52,8 @@ void AppendUnLog(const wchar_t* text) {
     SendMessageW(g_hUnLogBox, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageW(g_hUnLogBox, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
     SendMessageW(g_hUnLogBox, WM_VSCROLL, SB_BOTTOM, 0);
+    InvalidateRect(g_hUnLogBox, NULL, FALSE);
+    UpdateWindow(g_hUnLogBox);
 }
 
 void SetUnProgress(int percent, const wchar_t* statusMsg) {
@@ -50,14 +61,14 @@ void SetUnProgress(int percent, const wchar_t* statusMsg) {
         SendMessageW(g_hUnProgress, PBM_SETPOS, (WPARAM)percent, 0);
     }
     if (g_hUnLblStatus && statusMsg) {
-        SetWindowTextW(g_hUnLblStatus, statusMsg);
+        SafeSetText(g_hUnLblStatus, statusMsg);
     }
     if (statusMsg) {
         AppendUnLog(statusMsg);
     }
 }
 
-static BOOL RunSilentCmd(const wchar_t* cmd) {
+static BOOL RunSilentCmdWithTimeout(const wchar_t* cmd, DWORD timeoutMs) {
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
@@ -72,7 +83,10 @@ static BOOL RunSilentCmd(const wchar_t* cmd) {
     if (!CreateProcessW(NULL, cmdBuf, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         return FALSE;
     }
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD waitRes = WaitForSingleObject(pi.hProcess, timeoutMs);
+    if (waitRes == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 1);
+    }
     DWORD exitCode = 0;
     GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
@@ -85,30 +99,58 @@ unsigned __stdcall UninstallThread(void* param) {
     EnableWindow(g_hUnBtnRemove, FALSE);
     EnableWindow(g_hUnBtnCancel, FALSE);
 
-    SetUnProgress(10, L"Starting SegAUD uninstaller...");
-    Sleep(400);
+    SetUnProgress(10, L"Terminating background SegAUD processes...");
+    // Instant taskkill of SegAUD processes and any orphaned python processes running app.py
+    RunSilentCmdWithTimeout(L"taskkill.exe /F /IM SegAUD.exe /T", 2500);
+    RunSilentCmdWithTimeout(L"taskkill.exe /F /FI \"WINDOWTITLE eq SegAUD*\" /T", 2500);
+    RunSilentCmdWithTimeout(L"cmd.exe /c for /f \"tokens=5\" %a in ('netstat -aon ^| findstr \":8080\"') do taskkill /F /PID %a 2>nul", 3000);
 
-    // 1. Remove Shortcuts
+    // Mark as uninstalled immediately
+    DeleteFileW(L".installed");
+    HANDLE hUninst = CreateFileW(L".uninstalled", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hUninst != INVALID_HANDLE_VALUE) CloseHandle(hUninst);
+    AppendUnLog(L"[✓] Stopped active application processes.");
+    Sleep(200);
+
+    // 1. Remove Desktop and Start Menu entries using direct native Win32 API
     LRESULT rmShortcuts = SendMessageW(g_hUnChkShortcuts, BM_GETCHECK, 0, 0);
     if (rmShortcuts == BST_CHECKED) {
-        SetUnProgress(35, L"Removing Desktop and Start Menu application shortcuts...");
-        RunSilentCmd(L"powershell -NoProfile -Command \"$d=[System.Environment]::GetFolderPath('Desktop')+'\\SegAUD.lnk'; if (Test-Path $d) { Remove-Item $d -Force }; $p=[System.Environment]::GetFolderPath('Programs')+'\\SegAUD.lnk'; if (Test-Path $p) { Remove-Item $p -Force };\"");
-        AppendUnLog(L"[✓] Removed Desktop and Start Menu shortcuts.");
+        SetUnProgress(40, L"Removing SegAUD application from Desktop and Start Menu...");
+        wchar_t path[MAX_PATH];
+        if (SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, path) == S_OK) {
+            PathAppendW(path, L"SegAUD.lnk");
+            DeleteFileW(path);
+        }
+        if (SHGetFolderPathW(NULL, CSIDL_PROGRAMS, NULL, 0, path) == S_OK) {
+            PathAppendW(path, L"SegAUD.lnk");
+            DeleteFileW(path);
+        }
+        AppendUnLog(L"[✓] Removed SegAUD application from Desktop and Start Menu.");
     } else {
-        AppendUnLog(L"[—] Shortcuts preserved.");
+        AppendUnLog(L"[—] Desktop and Start Menu items preserved.");
     }
-    Sleep(500);
+    Sleep(200);
 
-    // 2. Remove venv if checked
+    // 2. Remove venv if checked (instant rename + safe background purge)
     LRESULT rmVenv = SendMessageW(g_hUnChkVenv, BM_GETCHECK, 0, 0);
     if (rmVenv == BST_CHECKED) {
-        SetUnProgress(70, L"Removing Python virtual environment (freeing disk space)...");
-        RunSilentCmd(L"cmd.exe /c if exist venv rmdir /s /q venv");
-        AppendUnLog(L"[✓] Virtual environment folder (.\\venv) removed.");
+        SetUnProgress(75, L"Removing Python virtual environment...");
+        // Kill any lingering python processes locking the venv
+        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM python.exe /T", 2000);
+        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM pythonw.exe /T", 2000);
+
+        // Instant isolation: rename venv to _venv_trash (instant metadata pointer move, 1ms)
+        if (GetFileAttributesW(L"venv") != INVALID_FILE_ATTRIBUTES) {
+            MoveFileW(L"venv", L"_venv_trash");
+        }
+
+        // Purge _venv_trash with a strict 8-second safety timeout
+        RunSilentCmdWithTimeout(L"cmd.exe /c if exist _venv_trash rd /s /q _venv_trash", 8000);
+        AppendUnLog(L"[✓] Python environment removed successfully.");
     } else {
         AppendUnLog(L"[—] Python environment kept intact.");
     }
-    Sleep(400);
+    Sleep(200);
 
     // 3. User data safety note
     AppendUnLog(L"[Note] Your audio files and generated segment CSVs in segments\\ have been safely preserved.");
@@ -145,31 +187,31 @@ LRESULT CALLBACK UnDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         // Title
         HWND hTitle = CreateWindowExW(0, L"STATIC", L"SegAUD Uninstaller Wizard",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 20, 480, 26, hwnd, NULL, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 20, 480, 26, hwnd, NULL, NULL, NULL);
         SendMessageW(hTitle, WM_SETFONT, (WPARAM)g_hFontTitle, TRUE);
 
         // Subtitle
-        HWND hSub = CreateWindowExW(0, L"STATIC", L"Remove SegAUD application shortcuts and environment components",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 48, 480, 20, hwnd, NULL, NULL, NULL);
+        HWND hSub = CreateWindowExW(0, L"STATIC", L"Remove SegAUD application and environment components",
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 48, 480, 20, hwnd, NULL, NULL, NULL);
         SendMessageW(hSub, WM_SETFONT, (WPARAM)g_hFontBody, TRUE);
 
         CreateWindowExW(0, L"STATIC", NULL,
             WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 24, 76, 480, 2, hwnd, NULL, NULL, NULL);
 
         // Options
-        g_hUnChkShortcuts = CreateWindowExW(0, L"BUTTON", L"Remove Desktop and Start Menu application shortcuts",
+        g_hUnChkShortcuts = CreateWindowExW(0, L"BUTTON", L"Remove SegAUD application from Desktop and Start Menu",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 24, 88, 480, 22, hwnd, (HMENU)IDD_UN_CHK_SHORTCUTS, NULL, NULL);
         SendMessageW(g_hUnChkShortcuts, WM_SETFONT, (WPARAM)g_hFontBody, TRUE);
         SendMessageW(g_hUnChkShortcuts, BM_SETCHECK, BST_CHECKED, 0);
 
-        g_hUnChkVenv = CreateWindowExW(0, L"BUTTON", L"Remove Python virtual environment (free up disk space)",
+        g_hUnChkVenv = CreateWindowExW(0, L"BUTTON", L"Remove Python virtual environment and ML dependencies",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 24, 114, 480, 22, hwnd, (HMENU)IDD_UN_CHK_VENV, NULL, NULL);
         SendMessageW(g_hUnChkVenv, WM_SETFONT, (WPARAM)g_hFontBody, TRUE);
         SendMessageW(g_hUnChkVenv, BM_SETCHECK, BST_UNCHECKED, 0);
 
         // Status Label
         g_hUnLblStatus = CreateWindowExW(0, L"STATIC", L"Click 'Uninstall SegAUD' to proceed with uninstallation.",
-            WS_CHILD | WS_VISIBLE | SS_LEFT, 24, 145, 480, 20, hwnd, (HMENU)IDD_UN_LBL_STATUS, NULL, NULL);
+            WS_CHILD | WS_VISIBLE | SS_LEFT | SS_NOPREFIX, 24, 144, 480, 20, hwnd, (HMENU)IDD_UN_LBL_STATUS, NULL, NULL);
         SendMessageW(g_hUnLblStatus, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
 
         // Progress Bar
@@ -207,7 +249,7 @@ LRESULT CALLBACK UnDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             if (!g_isUninstalling) {
-                if (MessageBoxW(hwnd, L"Are you sure you want to remove SegAUD application shortcuts?",
+                if (MessageBoxW(hwnd, L"Are you sure you want to uninstall SegAUD application?",
                     L"Confirm SegAUD Uninstallation", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                     _beginthreadex(NULL, 0, UninstallThread, NULL, 0, NULL);
                 }
@@ -219,11 +261,19 @@ LRESULT CALLBACK UnDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         return 0;
     }
 
+    case WM_CTLCOLOREDIT:
     case WM_CTLCOLORSTATIC: {
-        HDC hdcStatic = (HDC)wParam;
-        SetTextColor(hdcStatic, RGB(17, 24, 39));
-        SetBkMode(hdcStatic, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
+        HDC hdc = (HDC)wParam;
+        HWND hwndCtl = (HWND)lParam;
+        if (hwndCtl == g_hUnLogBox) {
+            SetTextColor(hdc, RGB(20, 24, 35));
+            SetBkColor(hdc, RGB(255, 255, 255));
+            return (LRESULT)GetStockObject(WHITE_BRUSH);
+        }
+        SetTextColor(hdc, RGB(17, 24, 39));
+        SetBkColor(hdc, GetSysColor(COLOR_BTNFACE));
+        SetBkMode(hdc, OPAQUE);
+        return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
     }
 
     case WM_CLOSE:

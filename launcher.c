@@ -273,6 +273,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
+    // Check if SegAUD is installed (.installed marker required)
+    if (GetFileAttributesW(L".installed") == INVALID_FILE_ATTRIBUTES) {
+        int ans = MessageBoxW(
+            NULL,
+            L"SegAUD is currently not installed on this PC.\n\n"
+            L"Would you like to run the SegAUD Setup Wizard (Install_SegAUD.exe) to install now?",
+            L"SegAUD — Not Installed",
+            MB_YESNO | MB_ICONINFORMATION
+        );
+        if (ans == IDYES) {
+            ShellExecuteW(NULL, L"open", L"Install_SegAUD.exe", NULL, NULL, SW_SHOWNORMAL);
+        }
+        return 0;
+    }
+
     // 2. Check if SegAUD is already running via Mutex
     HANDLE hMutex = CreateMutexW(NULL, FALSE, MUTEX_NAME);
     DWORD lastErr = GetLastError();

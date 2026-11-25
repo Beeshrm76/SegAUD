@@ -2340,19 +2340,30 @@ code { font-family: var(--font-mono); }
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 .model-name {
   font-size: .9rem;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 .tag-default-badge {
-  font-size: .68rem;
-  padding: 2px 8px;
-  border-radius: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .66rem;
+  padding: 3px 8px;
+  border-radius: 9999px;
   background: var(--accent-dim);
   color: var(--accent);
   font-weight: 700;
   text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 .model-applies-to {
   font-size: .75rem;
@@ -2880,6 +2891,14 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: border-color 0.2s ease;
+}
+.loaded-audio-card .hardware-panel-group,
+.loaded-audio-card .threads-panel-group {
+  margin-top: 10px;
+  margin-bottom: 4px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 .hardware-panel-group:hover,
 .threads-panel-group:hover {

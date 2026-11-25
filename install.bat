@@ -185,6 +185,10 @@ if exist "create_shortcuts.ps1" (
 )
 echo.
 
+:: Register installation state
+if exist "%ROOT_DIR%\.uninstalled" del /f /q "%ROOT_DIR%\.uninstalled" >nul 2>&1
+type nul > "%ROOT_DIR%\.installed" >nul 2>&1
+
 :: -------------------------------------------------------------------------
 :: Completion Banner
 :: -------------------------------------------------------------------------
