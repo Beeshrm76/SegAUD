@@ -2668,11 +2668,22 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-/* ── Service Worker Registration ── */
+/* ── Service Worker Registration & Cache Purge ── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => {
+    navigator.serviceWorker.register('sw.js?v=25').then(reg => {
+      reg.update();
+    }).catch(err => {
       console.log('SW registration error:', err);
+    });
+  });
+}
+
+// Purge any stale PWA cache versions
+if ('caches' in window) {
+  caches.keys().then(keys => {
+    keys.forEach(k => {
+      if (k !== 'segaud-v25') caches.delete(k);
     });
   });
 }
