@@ -1,17 +1,22 @@
+from __future__ import annotations
 from pathlib import Path
 import csv
 
-import torch
-from silero_vad import (
-    load_silero_vad,
-    read_audio,
-    get_speech_timestamps,
-    save_audio,
-)
+try:
+    import torch
+    from silero_vad import (
+        load_silero_vad,
+        read_audio,
+        get_speech_timestamps,
+        save_audio,
+    )
+    vad_model = load_silero_vad()
+except Exception:
+    torch = None
+    vad_model = None
 
 SAMPLE_RATE = 16000
 VAD_THREADS = 1
-vad_model = load_silero_vad()
 
 
 def set_threads(num_threads: int) -> int:

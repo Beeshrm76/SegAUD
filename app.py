@@ -34,6 +34,11 @@ if sys.platform == "win32":
 ROOT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT_DIR))
 
+try:
+    import torch
+except Exception:
+    torch = None
+
 import asr
 import vad
 from main import process_audio
@@ -165,17 +170,28 @@ class SegAudRequestHandler(SimpleHTTPRequestHandler):
             info = asr.get_active_model_info()
             info["status"] = "ok"
             info["engine"] = "Python Native Backend"
-            cuda_avail = torch.cuda.is_available()
+            cuda_avail = False
+            device_name = "CPU (x86_64)"
+            device_count = 0
+            vram_gb = 0.0
+
+            try:
+                import torch as _th
+                if _th is not None and hasattr(_th, "cuda") and _th.cuda.is_available():
+                    cuda_avail = True
+                    device_name = _th.cuda.get_device_name(0)
+                    device_count = _th.cuda.device_count()
+                    try:
+                        vram_gb = round(_th.cuda.get_device_properties(0).total_memory / (1024**3), 2)
+                    except Exception:
+                        vram_gb = 0.0
+            except Exception:
+                pass
+
             info["cuda_available"] = cuda_avail
-            info["device_name"] = torch.cuda.get_device_name(0) if cuda_avail else "CPU (x86_64)"
-            info["device_count"] = torch.cuda.device_count() if cuda_avail else 0
-            if cuda_avail:
-                try:
-                    info["vram_gb"] = round(torch.cuda.get_device_properties(0).total_memory / (1024**3), 2)
-                except Exception:
-                    info["vram_gb"] = 0.0
-            else:
-                info["vram_gb"] = 0.0
+            info["device_name"] = device_name
+            info["device_count"] = device_count
+            info["vram_gb"] = vram_gb
             info["cpu_count"] = os.cpu_count() or 4
             info["asr_threads"] = getattr(asr, "ASR_THREADS", 4)
             info["vad_threads"] = getattr(vad, "VAD_THREADS", 1)

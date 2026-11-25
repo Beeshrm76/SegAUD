@@ -5,7 +5,12 @@ import re
 import sys
 import warnings
 from pathlib import Path
-import torch
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
 
 # Suppress harmless PyTorch multiprocessing and HuggingFace generation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -25,7 +30,7 @@ if sys.platform == "win32":
         pass
 
 REPO = "ARTPARK-IISc/SraVaani-1.0"
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda" if (torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available()) else "cpu"
 ASR_THREADS = 4
 
 _loaded_models = {}
@@ -39,12 +44,13 @@ def set_device(device_name: str) -> str:
     """Dynamically set the compute device ('cuda', 'cpu', 'auto')."""
     global DEVICE
     clean = (device_name or "auto").lower().strip()
+    cuda_ok = torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available()
     if clean == "cuda":
-        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+        DEVICE = "cuda" if cuda_ok else "cpu"
     elif clean == "cpu":
         DEVICE = "cpu"
     else:
-        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+        DEVICE = "cuda" if cuda_ok else "cpu"
     return DEVICE
 
 
@@ -54,7 +60,8 @@ def set_threads(num_threads: int) -> int:
     try:
         val = int(num_threads)
         ASR_THREADS = min(32, max(1, val))
-        torch.set_num_threads(ASR_THREADS)
+        if torch is not None and hasattr(torch, "set_num_threads"):
+            torch.set_num_threads(ASR_THREADS)
     except Exception:
         pass
     return ASR_THREADS

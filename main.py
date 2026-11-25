@@ -13,7 +13,10 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 
 import asr
 import diarization
