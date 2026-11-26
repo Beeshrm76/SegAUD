@@ -40,7 +40,15 @@ static BOOL g_isUnFinished = FALSE;
 
 static void SafeSetText(HWND hWnd, const wchar_t* text) {
     if (!hWnd || !text) return;
+    HWND hParent = GetParent(hWnd);
+    RECT rc;
+    GetWindowRect(hWnd, &rc);
+    MapWindowPoints(HWND_DESKTOP, hParent, (LPPOINT)&rc, 2);
     SetWindowTextW(hWnd, text);
+    if (hParent) {
+        InvalidateRect(hParent, &rc, TRUE);
+        UpdateWindow(hParent);
+    }
     InvalidateRect(hWnd, NULL, TRUE);
     UpdateWindow(hWnd);
 }
@@ -51,9 +59,7 @@ void AppendUnLog(const wchar_t* text) {
     SendMessageW(g_hUnLogBox, EM_SETSEL, (WPARAM)len, (LPARAM)len);
     SendMessageW(g_hUnLogBox, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageW(g_hUnLogBox, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
-    SendMessageW(g_hUnLogBox, WM_VSCROLL, SB_BOTTOM, 0);
-    InvalidateRect(g_hUnLogBox, NULL, FALSE);
-    UpdateWindow(g_hUnLogBox);
+    SendMessageW(g_hUnLogBox, EM_SCROLLCARET, 0, 0);
 }
 
 void SetUnProgress(int percent, const wchar_t* statusMsg) {
@@ -131,21 +137,35 @@ unsigned __stdcall UninstallThread(void* param) {
     }
     Sleep(200);
 
-    // 2. Remove venv if checked (instant rename + safe background purge)
+    // 2. Remove venv if checked (instant rename + safe detached background purge)
     LRESULT rmVenv = SendMessageW(g_hUnChkVenv, BM_GETCHECK, 0, 0);
     if (rmVenv == BST_CHECKED) {
-        SetUnProgress(75, L"Removing Python virtual environment...");
-        // Kill any lingering python processes locking the venv
-        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM python.exe /T", 2000);
-        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM pythonw.exe /T", 2000);
+        SetUnProgress(75, L"Releasing and removing Python virtual environment...");
+        // Terminate any python processes locking the venv
+        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM python.exe /T", 1500);
+        RunSilentCmdWithTimeout(L"taskkill.exe /F /IM pythonw.exe /T", 1500);
 
         // Instant isolation: rename venv to _venv_trash (instant metadata pointer move, 1ms)
+        BOOL renamed = FALSE;
         if (GetFileAttributesW(L"venv") != INVALID_FILE_ATTRIBUTES) {
-            MoveFileW(L"venv", L"_venv_trash");
+            renamed = MoveFileW(L"venv", L"_venv_trash");
         }
 
-        // Purge _venv_trash with a strict 8-second safety timeout
-        RunSilentCmdWithTimeout(L"cmd.exe /c if exist _venv_trash rd /s /q _venv_trash", 8000);
+        // Asynchronously purge _venv_trash in a detached process so UI never freezes
+        if (renamed || GetFileAttributesW(L"_venv_trash") != INVALID_FILE_ATTRIBUTES) {
+            STARTUPINFOW siTrash;
+            PROCESS_INFORMATION piTrash;
+            ZeroMemory(&siTrash, sizeof(siTrash));
+            siTrash.cb = sizeof(siTrash);
+            siTrash.dwFlags = STARTF_USESHOWWINDOW;
+            siTrash.wShowWindow = SW_HIDE;
+            ZeroMemory(&piTrash, sizeof(piTrash));
+            wchar_t purgeCmd[] = L"cmd.exe /c rd /s /q _venv_trash";
+            if (CreateProcessW(NULL, purgeCmd, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &siTrash, &piTrash)) {
+                CloseHandle(piTrash.hProcess);
+                CloseHandle(piTrash.hThread);
+            }
+        }
         AppendUnLog(L"[✓] Python environment removed successfully.");
     } else {
         AppendUnLog(L"[—] Python environment kept intact.");
@@ -336,7 +356,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         WS_EX_DLGMODALFRAME,
         L"SegAUDUninstallerClass",
         L"SegAUD — Uninstaller Wizard",
-        WS_VISIBLE | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX,
+        WS_VISIBLE | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         posX, posY, winW, winH,
         NULL, NULL, hInstance, NULL
     );

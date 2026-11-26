@@ -2334,13 +2334,16 @@ code { font-family: var(--font-mono); }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 12px;
 }
 .model-info {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 .model-name {
   font-size: .9rem;
@@ -2351,23 +2354,27 @@ code { font-family: var(--font-mono); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: .66rem;
+  font-size: .64rem;
   padding: 3px 8px;
-  border-radius: 9999px;
-  background: var(--accent-dim);
-  color: var(--accent);
+  height: 20px;
+  line-height: 1;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
-  letter-spacing: 0.3px;
-  line-height: 1;
+  letter-spacing: 0.4px;
   text-align: center;
+  vertical-align: middle;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 .model-applies-to {
   font-size: .75rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 .token-input-row {
   display: flex;

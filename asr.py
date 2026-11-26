@@ -88,7 +88,6 @@ def clean_transcript(text: str) -> str:
     if t and not t.endswith('।'):
         t = t + ' ।'
     return t
-    return t
 
 
 def get_model(token: str = None, model_name: str = None):

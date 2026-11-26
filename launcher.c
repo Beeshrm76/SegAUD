@@ -33,7 +33,7 @@ static HICON g_hAppIcon = NULL;
 
 // Forward declarations
 static BOOL CheckPortActive(int port);
-static void LaunchDesktopAppWindow(const wchar_t* url);
+static void FocusAppWindow(void);
 static BOOL StartServerProcess(void);
 static void StopServerProcess(void);
 static void ShowTrayNotification(const wchar_t* title, const wchar_t* msg);
@@ -76,40 +76,28 @@ static BOOL CheckPortActive(int port) {
     return (selectRes > 0);
 }
 
-// Find Edge or Chrome to launch borderless app window
-static void LaunchDesktopAppWindow(const wchar_t* url) {
-    const wchar_t* candidate_paths[] = {
-        L"%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe",
-        L"%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe",
-        L"%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe",
-        L"%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe",
-        L"%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe"
-    };
-
-    wchar_t expanded[MAX_PATH];
-    for (size_t i = 0; i < sizeof(candidate_paths) / sizeof(candidate_paths[0]); i++) {
-        ExpandEnvironmentStringsW(candidate_paths[i], expanded, MAX_PATH);
-        DWORD attr = GetFileAttributesW(expanded);
-        if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY)) {
-            wchar_t cmdLine[1024];
-            swprintf(cmdLine, 1024, L"\"%ls\" --app=%ls --window-size=1366,850", expanded, url);
-
-            STARTUPINFOW si;
-            PROCESS_INFORMATION pi;
-            ZeroMemory(&si, sizeof(si));
-            si.cb = sizeof(si);
-            ZeroMemory(&pi, sizeof(pi));
-
-            if (CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-                CloseHandle(pi.hProcess);
-                CloseHandle(pi.hThread);
-                return;
+// Focus the native SegAUD desktop application window
+static void FocusAppWindow(void) {
+    HWND hApp = FindWindowW(NULL, L"SegAUD — Audio Segmentation & Transcription Platform");
+    if (!hApp) {
+        HWND hCur = GetTopWindow(NULL);
+        while (hCur) {
+            wchar_t title[256];
+            if (GetWindowTextW(hCur, title, 256) > 0) {
+                if (wcsstr(title, L"SegAUD") != NULL) {
+                    hApp = hCur;
+                    break;
+                }
             }
+            hCur = GetNextWindow(hCur, GW_HWNDNEXT);
         }
     }
-
-    // Fallback: Default browser
-    ShellExecuteW(NULL, L"open", url, NULL, NULL, SW_SHOWNORMAL);
+    if (hApp) {
+        ShowWindow(hApp, SW_RESTORE);
+        SetForegroundWindow(hApp);
+    } else {
+        ShellExecuteW(NULL, L"open", APP_URL, NULL, NULL, SW_SHOWNORMAL);
+    }
 }
 
 // Starts the Python backend server
@@ -215,7 +203,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_TRAYICON: {
             if (LOWORD(lParam) == WM_LBUTTONDBLCLK || LOWORD(lParam) == WM_LBUTTONUP) {
                 // Open / bring app window to front
-                LaunchDesktopAppWindow(APP_URL);
+                FocusAppWindow();
             } else if (LOWORD(lParam) == WM_RBUTTONUP) {
                 POINT pt;
                 GetCursorPos(&pt);
@@ -232,7 +220,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
                 DestroyMenu(hMenu);
 
                 if (cmd == IDM_OPEN_APP) {
-                    LaunchDesktopAppWindow(APP_URL);
+                    FocusAppWindow();
                 } else if (cmd == IDM_OPEN_BROWSER) {
                     ShellExecuteW(NULL, L"open", APP_URL, NULL, NULL, SW_SHOWNORMAL);
                 } else if (cmd == IDM_RESTART) {
@@ -292,8 +280,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HANDLE hMutex = CreateMutexW(NULL, FALSE, MUTEX_NAME);
     DWORD lastErr = GetLastError();
     if (hMutex && lastErr == ERROR_ALREADY_EXISTS) {
-        // App is already running! Simply launch / focus app window and exit
-        LaunchDesktopAppWindow(APP_URL);
+        // App is already running! Simply bring the native app window to focus and exit
+        FocusAppWindow();
         CloseHandle(hMutex);
         return 0;
     }
@@ -372,8 +360,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     Shell_NotifyIconW(NIM_ADD, &g_nid);
 
-    // 6. Launch Desktop Window
-    LaunchDesktopAppWindow(APP_URL);
+    // 6. Focus native desktop app window (launched by pythonw app.py)
+    Sleep(600);
+    FocusAppWindow();
 
     // 7. Message Loop
     MSG msg;

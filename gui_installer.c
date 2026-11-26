@@ -37,7 +37,15 @@ static BOOL g_isFinished = FALSE;
 
 static void SafeSetText(HWND hWnd, const wchar_t* text) {
     if (!hWnd || !text) return;
+    HWND hParent = GetParent(hWnd);
+    RECT rc;
+    GetWindowRect(hWnd, &rc);
+    MapWindowPoints(HWND_DESKTOP, hParent, (LPPOINT)&rc, 2);
     SetWindowTextW(hWnd, text);
+    if (hParent) {
+        InvalidateRect(hParent, &rc, TRUE);
+        UpdateWindow(hParent);
+    }
     InvalidateRect(hWnd, NULL, TRUE);
     UpdateWindow(hWnd);
 }
@@ -48,9 +56,7 @@ void AppendLog(const wchar_t* text) {
     SendMessageW(g_hLogBox, EM_SETSEL, (WPARAM)len, (LPARAM)len);
     SendMessageW(g_hLogBox, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageW(g_hLogBox, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
-    SendMessageW(g_hLogBox, WM_VSCROLL, SB_BOTTOM, 0);
-    InvalidateRect(g_hLogBox, NULL, FALSE);
-    UpdateWindow(g_hLogBox);
+    SendMessageW(g_hLogBox, EM_SCROLLCARET, 0, 0);
 }
 
 void SetProgress(int percent, const wchar_t* stepMsg, const wchar_t* detailMsg) {
@@ -377,7 +383,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         WS_EX_DLGMODALFRAME,
         L"SegAUDInstallerClass",
         L"SegAUD — Setup & Installation Wizard",
-        WS_VISIBLE | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX,
+        WS_VISIBLE | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         posX, posY, winW, winH,
         NULL, NULL, hInstance, NULL
     );

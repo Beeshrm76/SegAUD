@@ -606,9 +606,34 @@ def is_port_in_use(port):
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
+def start_native_app_window(url):
+    """Launch SegAUD in a genuine native desktop application window (WebView2)."""
+    try:
+        import webview
+        icon_path = str(DOCS_DIR / "favicon.ico")
+        window = webview.create_window(
+            title="SegAUD — Audio Segmentation & Transcription Platform",
+            url=url,
+            width=1366,
+            height=850,
+            min_size=(920, 620),
+            resizable=True,
+            text_select=True,
+            confirm_close=False
+        )
+        # private_mode=True ensures zero browser cache sharing
+        webview.start(private_mode=True)
+        return True
+    except Exception as e:
+        print(f"[SegAUD] Native window note: {e}")
+        return False
+
+
 def launch_desktop_window(url):
-    """Launch SegAUD in a native PC standalone app window using Edge or Chrome."""
-    # Look for Edge or Chrome
+    """Fallback: Launch SegAUD with isolated user profile (no browser cache sharing)."""
+    profile_dir = Path(os.environ.get("LOCALAPPDATA", str(ROOT_DIR))) / "SegAUD" / "isolated_profile"
+    profile_dir.mkdir(parents=True, exist_ok=True)
+
     candidates = [
         os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
         os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
@@ -620,12 +645,19 @@ def launch_desktop_window(url):
     for exe in candidates:
         if os.path.isfile(exe):
             try:
-                subprocess.Popen([exe, f"--app={url}", "--window-size=1366,850"])
+                subprocess.Popen([
+                    exe,
+                    f"--app={url}",
+                    f"--user-data-dir={profile_dir}",
+                    "--window-size=1366,850",
+                    "--no-first-run",
+                    "--no-default-browser-check"
+                ])
                 return
             except Exception:
                 pass
 
-    # Fallback to standard default web browser
+    # Fallback to standard web browser
     webbrowser.open(url)
 
 
@@ -674,14 +706,32 @@ def main():
         print(f" * Transcription Review: Standby ({vtr_msg})")
     print(" Opening desktop application window...")
 
-    # Launch desktop window after 0.6 second
-    threading.Timer(0.6, lambda: launch_desktop_window(app_url)).start()
+    # Start HTTP server on background daemon thread
+    server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    server_thread.start()
 
+    # Launch native desktop application window (WebView2) on main thread
+    launched_native = False
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\n[SegAUD] Shutting down server.")
+        launched_native = start_native_app_window(app_url)
+    except Exception as e:
+        print(f"[SegAUD] Native window note: {e}")
+
+    # Fallback if pywebview window could not be opened or ran headless
+    if not launched_native:
+        threading.Timer(0.3, lambda: launch_desktop_window(app_url)).start()
+        try:
+            while server_thread.is_alive():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+
+    print("\n[SegAUD] Shutting down server.")
+    try:
+        httpd.shutdown()
         httpd.server_close()
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

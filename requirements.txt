@@ -5,3 +5,4 @@ soundfile
 transformers
 sentencepiece
 huggingface_hub
+pywebview
