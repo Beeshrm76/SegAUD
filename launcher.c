@@ -78,20 +78,30 @@ static BOOL CheckPortActive(int port) {
 
 // Focus the native SegAUD desktop application window
 static void FocusAppWindow(void) {
-    HWND hApp = FindWindowW(NULL, L"SegAUD — Audio Segmentation & Transcription Platform");
-    if (!hApp) {
+    HWND hApp = NULL;
+    for (int retry = 0; retry < 15; retry++) {
+        hApp = FindWindowW(NULL, L"SegAUD — Audio Segmentation & Transcription Platform");
+        if (hApp) break;
+
         HWND hCur = GetTopWindow(NULL);
         while (hCur) {
             wchar_t title[256];
             if (GetWindowTextW(hCur, title, 256) > 0) {
-                if (wcsstr(title, L"SegAUD") != NULL) {
+                if (wcsstr(title, L"SegAUD") != NULL && 
+                    wcsstr(title, L"Tray") == NULL && 
+                    wcsstr(title, L"Wizard") == NULL &&
+                    wcsstr(title, L"Installer") == NULL &&
+                    wcsstr(title, L"Uninstaller") == NULL) {
                     hApp = hCur;
                     break;
                 }
             }
             hCur = GetNextWindow(hCur, GW_HWNDNEXT);
         }
+        if (hApp) break;
+        Sleep(200);
     }
+
     if (hApp) {
         ShowWindow(hApp, SW_RESTORE);
         SetForegroundWindow(hApp);
@@ -236,6 +246,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             return 0;
         }
 
+        case WM_TIMER: {
+            if (wParam == 1001 && g_serverStarted && g_piServer.hProcess) {
+                DWORD exitCode = 0;
+                if (GetExitCodeProcess(g_piServer.hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
+                    DestroyWindow(hWnd);
+                }
+            }
+            return 0;
+        }
+
         case WM_COMMAND: {
             return 0;
         }
@@ -359,6 +379,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     g_nid.dwInfoFlags = NIIF_INFO;
 
     Shell_NotifyIconW(NIM_ADD, &g_nid);
+    SetTimer(g_hWnd, 1001, 1000, NULL);
 
     // 6. Focus native desktop app window (launched by pythonw app.py)
     Sleep(600);

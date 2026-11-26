@@ -610,7 +610,6 @@ def start_native_app_window(url):
     """Launch SegAUD in a genuine native desktop application window (WebView2)."""
     try:
         import webview
-        icon_path = str(DOCS_DIR / "favicon.ico")
         window = webview.create_window(
             title="SegAUD — Audio Segmentation & Transcription Platform",
             url=url,
@@ -621,8 +620,7 @@ def start_native_app_window(url):
             text_select=True,
             confirm_close=False
         )
-        # private_mode=True ensures zero browser cache sharing
-        webview.start(private_mode=True)
+        webview.start()
         return True
     except Exception as e:
         print(f"[SegAUD] Native window note: {e}")
